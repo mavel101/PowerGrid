@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../pgComplex.hpp"
+#include "../pgVectorize/pgComplex.hpp"
 #include <complex>
 #include <cmath>
 #include <iostream>

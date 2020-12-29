@@ -1,9 +1,9 @@
-// pgCol.hpp
+// pgSubview_Col.hpp
 
 #include "PGIncludes.h"
 
 template<typename T>
-class pgCol<T> {
+class subview_col<T> {
 
 private:
 
@@ -15,20 +15,6 @@ bool isOnGPU;
 unsigned int n_elem;
 
 public:
-
-void set_size() {
-    if (isInitialized {
-        if (isOnGPU) {
-            #pragma acc exit data delete(mem) 
-        }
-        delete[](mem);
-        mem = malloc(); 
-        #pragma acc enter data create(mem[0:n_elem])
-        #ifdef _OPENACC
-        acc_attach();
-        #endif
-    }
-} 
 
 unsigned int n_elem() const{
     return n_elem;

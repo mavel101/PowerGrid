@@ -6,8 +6,8 @@
 #endif
 
 #include "../PGIncludes.h"
-#include "../pgCol.hpp"
-#include "../pgComplex.hpp"
+#include "../pgVectorize/pgCol.hpp"
+#include "../pgVectorize/pgComplex.hpp"
 #include <cmath>
 #include <iostream>
 

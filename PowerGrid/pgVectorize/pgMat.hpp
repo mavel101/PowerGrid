@@ -208,7 +208,7 @@ arma::Mat<T> getArma() {
 
     return armaT;
 }
-
+/*
 // Return a column for use
 pgCol<T> col(const arma::uword colIndx) {
 
@@ -220,7 +220,7 @@ pgCol<T> col(const arma::uword colIndx) {
     }
     return std::move(pgC);
 }
-
+*/
 // Operators for element manipulation
 // We'll assume .at() is for fast, GPU manipulation
 inline

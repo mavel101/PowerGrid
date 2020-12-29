@@ -44,5 +44,6 @@
         "optional": "cpp",
         "complex": "cpp"
     },
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "cmake.configureOnOpen": true
 }
