@@ -4,11 +4,12 @@ cmake_minimum_required(VERSION 3.2) #CMake version 3.2 required to properly supp
 ## need to be set BEFORE calling project command (which does introspection and sets
 ## variables about the behavior of the compiler).
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_BUILD_TYPE Debug)
 
 project("PowerGrid" C CXX)
 
-option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" ON)
-option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " OFF)
+option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" OFF)
+option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " ON)
 option(MPISupport "Enable MPI Support" ON)
 
 if(OPENACC_GPU AND OPENACC_MP)

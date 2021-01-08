@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
   // Grab first acquisition to get parameters (We assume all subsequent
   // acquisitions will be similar).
   ISMRMRD::Acquisition acq;
-  d->readAcquisition(0, acq);
+  d->readAcquisition(numAcq-1, acq); // take last acquisition as first acquisition is usually a noise scan - mv
   uword nro = acq.number_of_samples();
   uword nc = acq.active_channels();
 
