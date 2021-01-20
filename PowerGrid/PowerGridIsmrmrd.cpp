@@ -37,7 +37,7 @@ namespace po = boost::program_options;
 //using namespace PowerGrid;
 
 int main(int argc, char **argv) {
-  std::string rawDataFilePath, outputImageFilePath, senseMapFilePath,
+  std::string rawDataFilePath, outputImageFileName, senseMapFilePath,
       fieldMapFilePath, precisionString, TimeSegmentationInterp, FourierTrans,
       rawDataNavFilePath;
   uword Nx, Ny, Nz, NShots = 1, type = 1, L = 0, NIter = 10, FtType = 0;
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   desc.add_options()("help,h", "produce help message")(
       "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
       "input ISMRMRD Raw Data file")
- 			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for NIFTIimages")
+ 			("outputImage,o", po::value<std::string>(&outputImageFileName)->required(), "output filename (incl path) for NIFTIimages")
 			("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
@@ -180,13 +180,13 @@ int main(int argc, char **argv) {
    std::cout << "About to loop through the counters and scan the file"
             << std::endl;
 
-  std::string baseFilename = "img";
+  // std::string baseFilename = "img";
 
   
   std::string filename;
-  if (!outputImageFilePath.empty() && *outputImageFilePath.rbegin() != '/') {
-    	outputImageFilePath += '/';
-	}
+  // if (!outputImageFilePath.empty() && *outputImageFilePath.rbegin() != '/') {
+  //   	outputImageFilePath += '/';
+	// }
 
   for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
   
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
              for (uword NRep = 0; NRep < NRepMax +1; NRep++) {
 
 
-                      filename = outputImageFilePath + baseFilename + "_" + "Slice" + std::to_string(NSlice) +
+                      filename = outputImageFileName + "_" + "Slice" + std::to_string(NSlice) +
           								"_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
           								"_" + "Echo" + std::to_string(NEcho) + "_" + "Phase" + std::to_string(NPhase);
 
