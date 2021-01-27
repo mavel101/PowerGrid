@@ -27,14 +27,21 @@ set(Boost_NO_BOOST_CMAKE ON)
 
 if(MPISupport)
     find_package(MPI)
-    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization mpi)
+    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization python38 mpi) # add Python for wrapping
 else(MPISupport)
-    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization)
+    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization python38)
 endif(MPISupport)
 
 if(Boost_FOUND)
 	set(LIBS ${LIBS} ${Boost_LIBRARIES})
 	include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
+# Find python for wrapping
+find_package(Python COMPONENTS Interpreter Development)
+if(Python_FOUND)
+	set(LIBS ${LIBS} ${PYTHON_LIBRARIES})
+	include_directories(${Python_INCLUDE_DIRS})
 endif()
 
 set(CUDAVER 10.0)
@@ -159,6 +166,14 @@ set(POWERGRID_PCSENSE_TIMESEG
 )
 add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
 target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
+
+set(POWERGRID_PY
+	./PowerGrid/PowerGridPy.cpp
+)
+set(CMAKE_SHARED_MODULE_PREFIX "")
+add_library(PowerGridPy MODULE ${POWERGRID_PY})
+target_link_libraries(PowerGridPy ${LIBS} PowerGrid)
+target_include_directories(PowerGrid PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
