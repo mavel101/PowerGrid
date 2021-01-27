@@ -16,13 +16,20 @@ sudo make install
 
 ## Compile Python wrapper
 
-Just run `pip install .` from the PowerGrid root directory. This installs the module PowerGridPy, from which we can call PowerGridIsmrmrd.
+Python wrapper depends on Pybind. Pybind can be installed with `sudo apt install pybind11-dev`  
+For installing the wrapper just run `pip install .` from the PowerGrid root directory. This installs the module PowerGridPy..  
+For information run:
+
+```python
+from PowerGridPy import PowerGridIsmrmrd
+PowerGridIsmrmrd.__doc__
+```
 
 ## Debugging in VS Code
 
 in tasks.json:
 
-```
+```cpp
 {
     "version": "2.0.0",
     "tasks": [
@@ -40,7 +47,7 @@ in tasks.json:
 
 in launch.json (Dateien jeweils ersetzen):
 
-```
+```cpp
 {
     "version": "0.2.0",
     "configurations": [

@@ -34,13 +34,25 @@ Developed by:
 #include <boost/program_options.hpp>
 #include <chrono>
 
-#include <boost/python.hpp>
+#include "pybind11/pybind11.h"
+#include "pybind11/numpy.h"
+#include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/functional.h>
+#include <pybind11/chrono.h>
 
+namespace py = pybind11;
+
+typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
-int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
+py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
                      std::string FourierTrans, int timesegs, double beta, int iter, int regDims) {
 
+  // save image data and metadata in a dict
+  py::dict imgs;
+  cmplx_vec img_data;
+  
   uword Nx = nx;
   uword Ny = ny;
   uword Nz = nz;
@@ -65,7 +77,7 @@ int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, in
     } else {
       std::cout << "Did not recognize temporal interpolator selection. " << std::endl
                 << "Acceptable values are hanning or minmax."            << std::endl;
-      return 1;
+      return imgs;
     }
   
   } else if (FourierTrans.compare("DFTGrads") == 0) {
@@ -73,7 +85,7 @@ int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, in
   } else {
     std::cout << "Did not recognize Fourier transform selection. " << std::endl
               << "Acceptable values are DFT or NUFFT."             << std::endl;
-    return 1;
+    return imgs;
   }
 
 
@@ -120,7 +132,7 @@ int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, in
     std::cout
         << "This recon does not handle more than one encoding space. Aborting."
         << std::endl;
-    return -1;
+    return imgs;
   }
 
   int NShotMax  = hdr.encoding[0].encodingLimits.kspace_encoding_step_1->maximum;
@@ -154,13 +166,24 @@ int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, in
   //   	outputImageFilePath += '/';
 	// }
 
+  py::list shapes;
+  shapes.append(NSliceMax+1);
+  shapes.append(NPhaseMax+1);
+  shapes.append(NEchoMax+1);
+  shapes.append(NAvgMax+1);
+  shapes.append(NRepMax+1);
+  shapes.append(Nz);
+  shapes.append(Ny);
+  shapes.append(Nx);
+  imgs["shapes"] = shapes;
+
   for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
   
     //acc_set_device_num(tid, acc_device_nvidia);
     //Col<float> FM;
     Col<float> fmSlice;
     //Col<std::complex<float>> sen;
- 	Col<std::complex<float>> senSlice;
+   	Col<std::complex<float>> senSlice;
     Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
@@ -228,39 +251,39 @@ int PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, in
 	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
                               Ny, Nz, tvec, NIter);
                       }
-
-
-	                  //writeISMRMRDImageData<float>(d, ImageTemp, Nx, Ny, Nz);
-                    writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+                    if (!outFile.empty())
+                      writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+                      
+                    // save data for Python conversion
+                    for(int ii = 0; ii < Nx * Ny * Nz; ii++) {
+                      img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
                     }
-
+                  }
                 }
             }
         }
     }
 
+  // copy image data to pybind dict  
+  imgs["img_data"] = img_data;
 
   // Close ISMRMRD::Dataset, hdr, and acqTrack
 	closeISMRMRDData(d,hdr,acqTrack);
 
-  return 0;
+  return imgs;
 }
 
-BOOST_PYTHON_MODULE(PowerGridPy) {
 
-  namespace python = boost::python;
-  python::docstring_options doc_options;
-  doc_options.disable_py_signatures();
-  doc_options.disable_cpp_signatures();
+PYBIND11_MODULE(PowerGridPy, m) {
+
   // Expose the function PowerGrid().
-  python::def("PowerGridIsmrmrd", PowerGridIsmrmrd, 
+  m.def("PowerGridIsmrmrd", &PowerGridIsmrmrd, 
               "Executes PowerGridIsmrmrd with specified parameters.\n\\
                 Parameters\n\\
-                ----------\n\\
                     inFile : string\n\\
                         input ISMRMRD Raw Data file (incl path)\n\\
                     outFile : string\n\\
-                        output ISMRMRD Raw Data file (incl path)\n\\
+                        output path for Nifti output file (incl path) - default not saving Images into Nifti file\n\\
                     FourierTrans : string\n\\
                         Fourier Transform (NUFFT (default), DFT or DFTGrads)\n\\
                     timesegs : int\n\\
@@ -276,8 +299,11 @@ BOOST_PYTHON_MODULE(PowerGridPy) {
                     nShots: int\n\\
                         Number of Shots (default: 1)\n\\
                     nx, ny, nz : int\n\\
-                        Image size in x,y,z. Default is 0, then sizes are read from ISRMRD header encoded space.",
-                (python::arg("inFile"), "outFile", python::arg("nx")=0, python::arg("ny")=0, python::arg("nz")=0, python::arg("nShots")=1, python::arg("TSInterp")="histo",
-                 python::arg("FourierTrans")="NUFFT", python::arg("timesegs")=0, python::arg("beta")=0.0, python::arg("iter")=10, python::arg("regDims")=3)
+                        Image size in x,y,z. Default is 0, then sizes are read from ISRMRD header encoded space.\n\\
+                Returns\n\\
+                    Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
+                    np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
+                py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
+                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=0, py::arg("beta")=0.0, py::arg("iter")=10, py::arg("regDims")=3
         );
 }
