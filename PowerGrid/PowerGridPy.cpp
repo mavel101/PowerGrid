@@ -204,7 +204,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 			                    kz, tvec);
 
                           // Deal with the number of time segments
-						            if(L==0) {
+						            if(L==-1) {
 							            switch(type) {
 								            case 1:
 									            L = ceil((arma::max(tvec) - arma::min(tvec))/2E-3);
@@ -287,7 +287,7 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     FourierTrans : string\n\\
                         Fourier Transform (NUFFT (default), DFT or DFTGrads)\n\\
                     timesegs : int\n\\
-                        Number of time segments for B0 correction. Default is 0, then time segments will be determined from readout duration.\n\\
+                        Number of time segments for B0 correction - 0: no B0 correction, -1 (default): segments will be determined from readout duration\n\\
                     niter: int\n\\
                         Number of CG iterations (default=10)\n\\
                     TSInterp: string\n\\
