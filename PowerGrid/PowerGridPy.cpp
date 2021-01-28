@@ -47,7 +47,7 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
 py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
-                     std::string FourierTrans, int timesegs, double beta, int iter, int regDims) {
+                     std::string FourierTrans, int timesegs, double beta, int niter, int regDims) {
 
   // save image data and metadata in a dict
   py::dict imgs;
@@ -58,7 +58,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   uword Nz = nz;
   uword NShots = nShots;
   uword L = timesegs;
-  uword NIter = iter;
+  uword NIter = niter;
   uword dims2penalize = regDims;
   uword FtType = 1, type = 1;
   if (FourierTrans.compare("DFT") == 0) {
@@ -288,7 +288,7 @@ PYBIND11_MODULE(PowerGridPy, m) {
                         Fourier Transform (NUFFT (default), DFT or DFTGrads)\n\\
                     timesegs : int\n\\
                         Number of time segments for B0 correction. Default is 0, then time segments will be determined from readout duration.\n\\
-                    iter: int\n\\
+                    niter: int\n\\
                         Number of CG iterations (default=10)\n\\
                     TSInterp: string\n\\
                         Field Correction Interpolator (histo (default), hanning or minmax)\n\\
@@ -304,6 +304,6 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
                 py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
-                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=0, py::arg("beta")=0.0, py::arg("iter")=10, py::arg("regDims")=3
+                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=0, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
         );
 }
