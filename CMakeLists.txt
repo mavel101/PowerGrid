@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 project("PowerGrid" C CXX)
 
 option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" OFF)
-option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " ON)
+option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " OFF)
 option(MPISupport "Enable MPI Support" ON)
 
 if(OPENACC_GPU AND OPENACC_MP)
