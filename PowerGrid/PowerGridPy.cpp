@@ -304,6 +304,6 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
                 py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
-                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=0, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
+                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
         );
 }
