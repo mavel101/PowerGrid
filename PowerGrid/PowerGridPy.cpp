@@ -221,6 +221,17 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 							            std::cout << "Info: Setting L = " << L << " by default." << std::endl; 
 						            }
 
+                      // Adapt number of time segments based on the range of the field map
+                      double minFM = arma::min(arma::vectorise(fmSlice));
+                      double maxFM = arma::max(arma::vectorise(fmSlice));
+                      double rangeFM_ref;
+                      if (NSlice==0){
+                        rangeFM_ref = maxFM - minFM;
+                      }
+                      else{
+                        L = (int) (L*(maxFM - minFM)/rangeFM_ref);
+                        std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
+                      }
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
 	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
