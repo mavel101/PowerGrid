@@ -225,10 +225,13 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                       double minFM = arma::min(arma::vectorise(fmSlice));
                       double maxFM = arma::max(arma::vectorise(fmSlice));
                       double rangeFM_ref;
+                      uword L_save = L;
+
                       if (NSlice==0){
                         rangeFM_ref = maxFM - minFM;
                       }
                       else{
+                        L_save = L;
                         L = (int) (L*(maxFM - minFM)/rangeFM_ref);
                         std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
                       }
@@ -268,6 +271,9 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                     // save data for Python conversion
                     for(int ii = 0; ii < Nx * Ny * Nz; ii++) {
                       img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+
+                    // set L back to original value
+                    L = L_save;
                     }
                   }
                 }
