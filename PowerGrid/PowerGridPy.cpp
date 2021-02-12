@@ -196,6 +196,9 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
           for (uword NAvg = 0; NAvg <= NAvgMax; NAvg++) {
              for (uword NRep = 0; NRep < NRepMax +1; NRep++) {
 
+                      // check for keyboard interrupt
+                      if (PyErr_CheckSignals() != 0)
+                        throw py::error_already_set();
 
                       filename = outFile + "_" + "Slice" + std::to_string(NSlice) +
           								"_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
@@ -275,6 +278,10 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 
                     // set L back to original value
                     L = L_save;
+
+                    // check for keyboard interrupt
+                    if (PyErr_CheckSignals() != 0)
+                      throw py::error_already_set();
                     }
                   }
                 }
