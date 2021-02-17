@@ -189,8 +189,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
     uword L_save;
-    double FM_mean;
-    double FM_mean_ref;
+    double FM_range;
+    double FM_range_ref;
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
 		for (uword NEcho = 0; NEcho <= NEchoMax; NEcho++) {
           for (uword NAvg = 0; NAvg <= NAvgMax; NAvg++) {
@@ -230,11 +230,11 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                       // Adapt number of time segments based on the range of the field map
                       L_save = L;
                       if (NSlice==0){
-                        FM_mean_ref = arma::mean(arma::abs(arma::vectorise(fmSlice)));
+                        FM_range_ref = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
                       }
                       else{
-                        FM_mean = arma::mean(arma::abs(arma::vectorise(fmSlice)));
-                        L = (int) (L*sqrt(FM_mean/FM_mean_ref));
+                        FM_range = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
+                        L = (int) (L*sqrt(FM_range/FM_range_ref));
                         if (L>15)
                           L = 15; // more than 15 time segments takes long time and does not lead to good results
                         std::cout << "Adapting time segments to L = " << L << " based on Field Map absolute mean value." << std::endl; 
