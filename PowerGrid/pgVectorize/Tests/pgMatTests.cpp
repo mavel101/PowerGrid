@@ -5,7 +5,7 @@
 #endif
 
 #include "../PGIncludes.h"
-#include "../pgMat.hpp"
+#include "../pgVectorize/pgMat.hpp"
 #include <cmath>
 #include <iostream>
 

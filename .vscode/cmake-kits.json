@@ -1,0 +1,10 @@
+[
+    {
+        "name": "NVIDIA HPC SDK 20.11",
+        "compilers": {
+            "C": "/opt/nvidia/hpc_sdk/Linux_aarch64/20.11/compilers/bin/nvc",
+            "CXX": "/opt/nvidia/hpc_sdk/Linux_aarch64/20.11/compilers/bin/nvc++",
+            "Fortran": "/opt/nvidia/hpc_sdk/Linux_aarch64/20.11/compilers/bin/nvfortran"
+        }
+    }
+]

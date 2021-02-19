@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include "../PGIncludes.h"
-#include "../pgCol.hpp"
+#include "../pgVectorize/pgCol.hpp"
 #include <cmath>
 #include <iostream>
 #include "accel.h"

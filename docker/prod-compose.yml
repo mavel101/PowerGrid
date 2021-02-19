@@ -3,7 +3,7 @@ services:
   ##### the develop image you've build
   ### don't forget to open ports for your app
   prod-image:
-    image: powergrid:latest
+    image: pg:latest
     privileged: true
     container_name: prodenv
     runtime: nvidia

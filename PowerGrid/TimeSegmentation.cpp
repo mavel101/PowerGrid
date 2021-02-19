@@ -186,8 +186,8 @@ TimeSegmentation<T1, Tobj>::TimeSegmentation(Tobj& G, Col<T1> map_in,
                 GTGap_ap += diagmat(ftwe_ap(ii - 1) * ones<Mat<CxT1>>(L + 1 - abs((L + 1) - (ii)), 1), -(L + 1) + (ii));
             }
             Mat<CxT1> iGTGap_ap;
-
-            if (rcond(GTGap_ap.st()) > 10 * datum::eps) {
+            T1 condVal = rcond(GTGap_ap.st().eval()) > 10 * datum::eps;
+            if (condVal) {
                 iGTGap_ap = inv(GTGap_ap.st());
             } else {
                 iGTGap_ap = pinv(GTGap_ap.st().eval());
