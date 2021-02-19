@@ -71,9 +71,5 @@
         "valarray": "cpp",
         "armadillo": "cpp"
     },
-<<<<<<< HEAD
-=======
-    "python.linting.pylintEnabled": false,
->>>>>>> cerjanic/hpcsdk
     "cmake.configureOnOpen": true
 }

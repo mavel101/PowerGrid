@@ -8,21 +8,6 @@
             "problemMatcher": [
                 "$gcc"
             ]
-<<<<<<< HEAD
-=======
-        },
-        {
-            "label": "build develop image",
-            "type": "shell",
-            "command": "cd docker; docker build -t pg-hpcsdk pg-hpcsdk",
-            "problemMatcher": []
-        },
-        {
-            "label": "build prod image",
-            "type": "shell",
-            "command": "cd docker; docker build -t pg pg",
-            "problemMatcher": []
->>>>>>> cerjanic/hpcsdk
         }
     ]
 }
