@@ -23,9 +23,9 @@ set(Boost_USE_STATIC_LIBS OFF)
 
 if(MPISupport)
     find_package(MPI)
-    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization python38 mpi) # add Python for wrapping
+    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization mpi)
 else(MPISupport)
-    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization python38)
+    find_package(Boost 1.43 REQUIRED COMPONENTS program_options serialization)
 endif(MPISupport)
 
 if(Boost_FOUND)
