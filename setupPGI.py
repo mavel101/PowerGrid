@@ -6,7 +6,6 @@ import platform
 import subprocess
 
 from distutils.version import LooseVersion
-from numpy.distutils.command.install import install as _install
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
