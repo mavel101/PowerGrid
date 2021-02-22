@@ -161,14 +161,9 @@ add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
 target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 
 # Python bindings
-find_package(pybind11)
-set(POWERGRID_PY
-	./PowerGrid/PowerGridPy.cpp
-)
-set(CMAKE_SHARED_MODULE_PREFIX "")
-add_library(PowerGridPy MODULE ${POWERGRID_PY})
-target_link_libraries(PowerGridPy ${LIBS} PowerGrid)
-target_include_directories(PowerGrid PRIVATE ${PYTHON_INCLUDE_DIRS})
+add_subdirectory(pybind11)
+pybind11_add_module(PowerGridPy ./PowerGrid/PowerGridPy.cpp)
+target_link_libraries(PowerGridPy PRIVATE ${LIBS} PowerGrid)
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
