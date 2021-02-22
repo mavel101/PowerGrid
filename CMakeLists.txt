@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19) #CMake version 3.19 required to properly su
 ## Flags and settings that change the compiler (i.e. from default to C++11 or C++14)
 ## need to be set BEFORE calling project command (which does introspection and sets
 ## variables about the behavior of the compiler).
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
 project("PowerGrid" C CXX)

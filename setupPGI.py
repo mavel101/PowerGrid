@@ -72,7 +72,7 @@ setup(
     name="PowerGridPy",
     version="1.0",
     author="Marten Veldmann",
-       description = 'This package wraps PowerGrid for Python',
+    description = 'This package wraps PowerGrid (compiled with PGI compiler) for Python.',
     long_description="",
     ext_modules=[CMakeExtension("PowerGridPy")],
     cmdclass={"build_ext": CMakeBuild},
