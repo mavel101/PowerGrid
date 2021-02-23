@@ -2,8 +2,8 @@
 
 ## Compiling
 
-For Compiling install packages on https://github.com/mrfil/PowerGrid.  
-Armadillo should be version 9.900.x 
+For Compiling install packages listed in docker/powergrid-dev.  
+Armadillo should be version 9.900.x .
 Compiling is working with newer versions of ISMRMRD (e.g. 1.4.2).  
 Cmake should be compiled with OPENACC_GPU=OFF und OPENACC_MP=ON/OFF if no CUDA is available (change in CMakeLists.txt).  
 
@@ -13,11 +13,6 @@ cd build
 cmake ..  
 make  
 sudo make install  
-
-For Compiling with PGI compilers run:
-cmake .. -DCMAKE_CXX_COMPILER=pgc++ instead of cmake ..
-
-The PGI Compiler has to be in the PATH. See docker/pg-hpcsdk/Dockerfile for information on how to set the PATH variables.
 
 ## Compile Python wrapper
 
@@ -29,7 +24,7 @@ cmake ..
 make
 sudo make install
 
-For installing the wrapper just run `pip install .` from the PowerGrid root directory. This installs the module PowerGridPy..  
+For installing the wrapper just run `pip install .` from the PowerGrid root directory. This installs the module PowerGridPy.
 For information run:
 
 ```python
@@ -37,7 +32,15 @@ from PowerGridPy import PowerGridIsmrmrd
 PowerGridIsmrmrd.__doc__
 ```
 
-If the Wrapper should be compiled with PGI compilers, use setupPGI.py instead of setup.py. The PGI Compiler has to be in the PATH.
+## Compile with PGI Compilers
+
+The PGI Compiler has to be in the PATH. Boost, SuperLU5 and Armadillo should also be compiled with PGI compilers.
+See docker/pg-hpcsdk/Dockerfile for information on how to set everything up.
+
+For Compiling with PGI compilers run:
+cmake .. -DCMAKE_CXX_COMPILER=pgc++ instead of cmake ..
+
+If the Python Wrapper should be compiled with PGI compilers, use setupPGI.py instead of setup.py.
 IMPORTANT: For compiling with Pybind11 & PGI, the CXX Standard in CMakeLists.txt has to be CMAKE_CXX_STANDARD 14.
 
 ## Debugging in VS Code
@@ -60,7 +63,7 @@ in tasks.json:
 }
 ```
 
-in launch.json (Dateien jeweils ersetzen):
+in launch.json:
 
 ```cpp
 {

@@ -38,7 +38,8 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
+                      '-DPYTHON_EXECUTABLE=' + sys.executable,
+                      '-DCMAKE_CXX_COMPILER=pgc++']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -71,7 +72,7 @@ setup(
     name="PowerGridPy",
     version="1.0",
     author="Marten Veldmann",
-       description = 'This package wraps PowerGrid for Python',
+    description = 'This package wraps PowerGrid (compiled with PGI compiler) for Python.',
     long_description="",
     ext_modules=[CMakeExtension("PowerGridPy")],
     cmdclass={"build_ext": CMakeBuild},
