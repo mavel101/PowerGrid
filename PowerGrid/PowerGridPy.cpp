@@ -286,7 +286,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 
 PYBIND11_MODULE(PowerGridPy, m) {
 
-  // Expose the function PowerGrid().
+  // Expose the function PowerGridIsmrmrd().
   m.def("PowerGridIsmrmrd", &PowerGridIsmrmrd, 
               "Executes PowerGridIsmrmrd with specified parameters.\n\\
                 Parameters\n\\

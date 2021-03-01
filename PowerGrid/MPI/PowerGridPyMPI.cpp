@@ -41,10 +41,17 @@ Developed by:
 #include <pybind11/functional.h>
 #include <pybind11/chrono.h>
 
+namespace py = pybind11;
 namespace bmpi = boost::mpi;
+
+typedef std::vector<std::complex<float>> cmplx_vec;
+typedef std::vector<std::vector<std::complex<float>>> cmplx_vec2d;
 
 py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
                      std::string FourierTrans, int timesegs, double beta, int niter, int regDims) {
+
+  // save image data and metadata in a dict
+  py::dict imgs;
 
   uword Nx = nx;
   uword Ny = ny;
@@ -55,7 +62,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
   uword dims2penalize = regDims;
   uword FtType = 1, type = 1;
 
-  bmpi::environment env(argc, argv, true);
+  bmpi::environment env(true);
   bmpi::communicator world;
 
     if (FourierTrans.compare("DFT") == 0) {
@@ -82,7 +89,6 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
                 << "Acceptable values are DFT or NUFFT."             << std::endl;
       return imgs;
     }
-  }
 
 
   ISMRMRD::Dataset *d;
@@ -240,10 +246,9 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
   double FM_range;
   double FM_range_ref;
 
-  // save image data and metadata in a dict
-  py::dict imgs;
-  int n_imgs = (*taskList)[world.rank()].size()
-  cmplx_vec<cmplx_vec> img_data2d(n_imgs, cmplx_vec (Nx*Ny*Nz, 0)); // create 2D vector tosave images thread safety
+  // define 2D vector for image data
+  int n_imgs = (*taskList)[world.rank()].size();
+  cmplx_vec2d img_data2d(n_imgs, cmplx_vec (Nx*Ny*Nz, 0)); // create 2D vector to save images thread safety
 
   for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
 
@@ -274,7 +279,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
-                      filename = outputImageFilePath + baseFilename + "_" + "Slice" + std::to_string(NSlice) +
+                      filename = outFile + "_" + "Slice" + std::to_string(NSlice) +
           								"_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
           								"_" + "Echo" + std::to_string(NEcho) + "_" + "Phase" + std::to_string(NPhase);
  
@@ -331,7 +336,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
                       
                     // save data for Python conversion
                     for(int j = 0; j < Nx * Ny * Nz; j++)
-                      img_data2d[j].push_back(static_cast<std::complex<float>>(ImageTemp(j)));
+                      img_data2d[ii][j] = static_cast<std::complex<float>>(ImageTemp(j));
 
                     // set L back to original value
                     L = L_save;
@@ -343,8 +348,8 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
                     
     }
 
-  // copy image data to pybind dict  
-  imgs["img_data"] = img_data;
+  // copy image data to pybind dict
+  imgs["img_data"] = img_data2d;
 
   // Close ISMRMRD::Dataset, hdr, and acqTrack
 	closeISMRMRDData(d,hdr,acqTrack);
@@ -353,11 +358,11 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
 }
 
 
-PYBIND11_MODULE(PowerGridPy, m) {
+PYBIND11_MODULE(PowerGridPyMPI, m) {
 
-  // Expose the function PowerGrid().
-  m.def("PowerGridIsmrmrd", &PowerGridIsmrmrd, 
-              "Executes PowerGridIsmrmrd with specified parameters.\n\\
+  // Expose the function PowerGridSenseMPI().
+  m.def("PowerGridSenseMPI", &PowerGridSenseMPI, 
+              "Executes PowerGridSenseMPI with specified parameters.\n\\
                 Parameters\n\\
                     inFile : string\n\\
                         input ISMRMRD Raw Data file (incl path)\n\\

@@ -44,3 +44,7 @@
     install(TARGETS PowerGridPcSenseMPI DESTINATION bin)
     install(TARGETS PowerGridSenseMPI DESTINATION bin)
     install(TARGETS PowerGridPcSenseMPI_TS DESTINATION bin)
+
+    # Python bindings
+    pybind11_add_module(PowerGridPyMPI PowerGridPyMPI.cpp)
+    target_link_libraries(PowerGridPyMPI PRIVATE ${mpiLIBS} PowerGrid)
