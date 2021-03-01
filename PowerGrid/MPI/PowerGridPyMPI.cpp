@@ -1,15 +1,30 @@
+
+/*
+(C) Copyright 2015-2016 The Board of Trustees of the University of Illinois.
+All rights reserved.
+
+See LICENSE.txt for the University of Illinois/NCSA Open Source license.
+
+Developed by:
+                     MRFIL Research Groups
+                University of Illinois, Urbana-Champaign
+*/
+
 /*****************************************************************************
 
-    File Name   [PowerGridPy.cpp]
+    File Name   [PowerGridSenseMPI.cpp]
 
-    Description [Python wrapper for PowerGrid reconstructions supporting ISMRMRD format
-                as input.]
+    Synopsis    [PowerGrid reconstruction executable supporting ISMRMRD format
+                                as input.]
 
-    Comment     [This code wraps PowerGridIsmrmrd.cpp for Python via pybind11.
-                Also minor changes in handling ISMRMRD data and reconstructed images were applied.
-                The reconstruction algorithm from PowerGridIsmrmrd.cpp was not changed.]
+    Description [This reconstruction supports 2D and 3D reconstructions with
+                                time segmentation for field correction. This
+ support is experimental.]
 
-    Marten Veldmann, DZNE Bonn
+    Revision    [0.2.0; Alex Cerjanic, BIOE UIUC]
+
+    Date        [2019/03/31]
+
  *****************************************************************************/
 
 // //Project headers.
@@ -26,18 +41,11 @@
 #include <pybind11/functional.h>
 #include <pybind11/chrono.h>
 
-namespace py = pybind11;
+namespace bmpi = boost::mpi;
 
-typedef std::vector<std::complex<float>> cmplx_vec;
-//using namespace PowerGrid;
-
-py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
+py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
                      std::string FourierTrans, int timesegs, double beta, int niter, int regDims) {
 
-  // save image data and metadata in a dict
-  py::dict imgs;
-  cmplx_vec img_data;
-  
   uword Nx = nx;
   uword Ny = ny;
   uword Nz = nz;
@@ -46,43 +54,43 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   uword NIter = niter;
   uword dims2penalize = regDims;
   uword FtType = 1, type = 1;
-  if (FourierTrans.compare("DFT") == 0) {
-      FtType = 2;
-  
-  } else if (FourierTrans.compare("NUFFT") == 0) {
-    
-    FtType = 1;
 
-    if (TSInterp.compare("hanning") == 0) {
-      type = 1;
-    } else if (TSInterp.compare("minmax") == 0) {
-      type = 2;
-    } else if (TSInterp.compare("histo") == 0) {
-      type = 3;
+  bmpi::environment env(argc, argv, true);
+  bmpi::communicator world;
+
+    if (FourierTrans.compare("DFT") == 0) {
+        FtType = 2;
+    
+    } else if (FourierTrans.compare("NUFFT") == 0) {
+      
+      FtType = 1;
+      if (TSInterp.compare("hanning") == 0) {
+        type = 1;
+      } else if (TSInterp.compare("minmax") == 0) {
+        type = 2;
+      } else if (TSInterp.compare("histo") == 0) {
+        type = 3;
+      } else {
+        std::cout << "Did not recognize temporal interpolator selection. " << std::endl
+                  << "Acceptable values are hanning or minmax."            << std::endl;
+        return imgs;
+      }
+    } else if (FourierTrans.compare("DFTGrads") == 0) {
+      FtType = 3;
     } else {
-      std::cout << "Did not recognize temporal interpolator selection. " << std::endl
-                << "Acceptable values are hanning or minmax."            << std::endl;
+      std::cout << "Did not recognize Fourier transform selection. " << std::endl
+                << "Acceptable values are DFT or NUFFT."             << std::endl;
       return imgs;
     }
-  
-  } else if (FourierTrans.compare("DFTGrads") == 0) {
-    FtType = 3;
-  } else {
-    std::cout << "Did not recognize Fourier transform selection. " << std::endl
-              << "Acceptable values are DFT or NUFFT."             << std::endl;
-    return imgs;
   }
 
 
   ISMRMRD::Dataset *d;
   ISMRMRD::IsmrmrdHeader hdr;
-  acqTracking *acqTrack;
+	acqTracking *acqTrack;
   Col<float> FM;
   Col<std::complex<float>> sen;
-  processISMRMRDInput<float>(inFile, d, hdr, FM, sen, acqTrack);
-
-  //std::cout << "Number of elements in SENSE Map = " << sen.n_rows << std::endl;
-  //std::cout << "Number of elements in Field Map = " << FM.n_rows << std::endl;
+ 	processISMRMRDInput<float>(inFile, d, hdr, FM, sen, acqTrack);
 
   uword numAcq = d->getNumberOfAcquisitions();
 
@@ -93,7 +101,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   uword nro = acq.number_of_samples();
   uword nc = acq.active_channels();
 
-  	// Handle Nx, Ny, Nz
+	// Handle Nx, Ny, Nz
 	if(Nx==0) {
 		Nx = hdr.encoding[0].encodedSpace.matrixSize.x;
 	} 
@@ -120,97 +128,160 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
     return imgs;
   }
 
-  int NShotMax  = hdr.encoding[0].encodingLimits.kspace_encoding_step_1->maximum;
-  int NParMax   = hdr.encoding[0].encodingLimits.kspace_encoding_step_2->maximum;
-  int NSliceMax = hdr.encoding[0].encodingLimits.slice->maximum;
-  int NSetMax   = hdr.encoding[0].encodingLimits.set->maximum;
-  int NRepMax   = hdr.encoding[0].encodingLimits.repetition->maximum;
-  int NAvgMax   = hdr.encoding[0].encodingLimits.average->maximum;
-  int NSegMax   = hdr.encoding[0].encodingLimits.segment->maximum;
-  int NEchoMax  = hdr.encoding[0].encodingLimits.contrast->maximum;
-  int NPhaseMax = hdr.encoding[0].encodingLimits.phase->maximum;
+  int NShotMax  = hdr.encoding[0].encodingLimits.kspace_encoding_step_1->maximum + 1;
+  int NParMax   = hdr.encoding[0].encodingLimits.kspace_encoding_step_2->maximum + 1;
+  int NSliceMax = hdr.encoding[0].encodingLimits.slice->maximum + 1;
+  int NSetMax   = hdr.encoding[0].encodingLimits.set->maximum + 1;
+  int NRepMax   = hdr.encoding[0].encodingLimits.repetition->maximum + 1;
+  int NAvgMax   = hdr.encoding[0].encodingLimits.average->maximum + 1;
+  int NSegMax   = hdr.encoding[0].encodingLimits.segment->maximum + 1;
+  int NEchoMax  = hdr.encoding[0].encodingLimits.contrast->maximum + 1;
+  int NPhaseMax = hdr.encoding[0].encodingLimits.phase->maximum + 1;
 
   std::cout << "NParMax = "   << NParMax << std::endl;
   std::cout << "NShotMax = "  << NShotMax << std::endl;
   std::cout << "NSliceMax = " << NSliceMax << std::endl;
   std::cout << "NSetMax = "   << NSetMax << std::endl;
   std::cout << "NRepMax = "   << NRepMax << std::endl;
+
   std::cout << "NAvgMax = "   << NAvgMax << std::endl;
+
   std::cout << "NEchoMax = "  << NEchoMax << std::endl;
+
   std::cout << "NPhaseMax = " << NPhaseMax << std::endl;
+
   std::cout << "NSegMax = "   << NSegMax << std::endl;
 
-   std::cout << "About to loop through the counters and scan the file"
+
+  std::cout << "About to loop through the counters and the file"
             << std::endl;
 
-  // std::string baseFilename = "img";
-
-  
-  std::string filename;
-  // if (!outputImageFilePath.empty() && *outputImageFilePath.rbegin() != '/') {
-  //   	outputImageFilePath += '/';
-	// }
-
   py::list shapes;
-  shapes.append(NSliceMax+1);
-  shapes.append(NPhaseMax+1);
-  shapes.append(NEchoMax+1);
-  shapes.append(NAvgMax+1);
-  shapes.append(NRepMax+1);
+  shapes.append(NSliceMax);
+  shapes.append(NPhaseMax);
+  shapes.append(NEchoMax);
+  shapes.append(NAvgMax);
+  shapes.append(NRepMax);
   shapes.append(Nz);
   shapes.append(Ny);
   shapes.append(Nx);
   imgs["shapes"] = shapes;
 
-  for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
-  
-    //acc_set_device_num(tid, acc_device_nvidia);
+  // std::string baseFilename = "img";
+  std::string filename;
+  // if (!outputImageFilePath.empty() && *outputImageFilePath.rbegin() != '/') {
+  //   	outputImageFilePath += '/';
+	// }
+
+  // Figure out what slices to work on in this rank
+  Col<uword> sliceList;
+  Col<uword> phaseList;
+  Col<uword> echoList;
+  Col<uword> avgList;
+  Col<uword> repList;
+
+  uword numTasks = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
+
+  sliceList.resize(numTasks);
+  phaseList.resize(numTasks);
+  echoList.resize(numTasks);
+  avgList.resize(numTasks);
+  repList.resize(numTasks);
+
+  // Now we make lists of the tasks such that we are mapping out all the tasks
+  for (uword ii = 0; ii < NSliceMax; ii++) {   // slice loop
+    for (uword jj = 0; jj < NPhaseMax; jj++) { // phase Loop
+      for (uword kk = 0; kk < NEchoMax; kk++) {  // echo loop
+        for (uword ll = 0; ll < NAvgMax; ll++) { // avg Loop
+          for (uword mm = 0; mm < NRepMax; mm++) {   // rep loop
+            sliceList( ii * NPhaseMax * NEchoMax * NAvgMax * NRepMax + jj * NEchoMax * NAvgMax * NRepMax + kk * NAvgMax * NRepMax + ll * NRepMax + mm) = ii;
+            phaseList( ii * NPhaseMax * NEchoMax * NAvgMax * NRepMax + jj * NEchoMax * NAvgMax * NRepMax + kk * NAvgMax * NRepMax + ll * NRepMax + mm) = jj;
+            echoList ( ii * NPhaseMax * NEchoMax * NAvgMax * NRepMax + jj * NEchoMax * NAvgMax * NRepMax + kk * NAvgMax * NRepMax + ll * NRepMax + mm) = kk;
+            avgList  ( ii * NPhaseMax * NEchoMax * NAvgMax * NRepMax + jj * NEchoMax * NAvgMax * NRepMax + kk * NAvgMax * NRepMax + ll * NRepMax + mm) = ll; 
+            repList  ( ii * NPhaseMax * NEchoMax * NAvgMax * NRepMax + jj * NEchoMax * NAvgMax * NRepMax + kk * NAvgMax * NRepMax + ll * NRepMax + mm) = mm;  
+          }
+        }
+      }
+    }
+  }
+
+  // Start by creating a 2D vector (vector of vectors) to hold the MPI rank ->
+  // task mapping
+  vector<uword> init(0);
+  std::vector<std::vector<uword> > *taskList = new std::vector<std::vector<uword>>(world.size(), init);
+  uword process = 0;
+  for (uword task = 0; task < numTasks; task++) {
+    (*taskList)[process].push_back(task);
+
+    process++; 
+    if (process == world.size()) {
+      process = 0;
+    }
+  }
+  uword taskIndex;
+  std::cout << " Number of tasks = " << numTasks << std::endl;
+
+  #ifdef OPENACC_GPU
+  // Spread out our tasks across GPUs.
+  uword gpunum;
+  uword ngpus = acc_get_num_devices( acc_device_nvidia );
+  if (ngpus) {
+    gpunum = world.rank() % ngpus;
+    acc_set_device_num( gpunum, acc_device_nvidia );
+  } else {
+    acc_set_device_type( acc_device_host );
+  }
+  #endif
+
+  std::cout << "Rank = " << world.rank() << std::endl;
+
+  uword NSlice, NRep, NAvg, NEcho, NPhase;
+  uword L_save;
+  double FM_range;
+  double FM_range_ref;
+
+  // save image data and metadata in a dict
+  py::dict imgs;
+  int n_imgs = (*taskList)[world.rank()].size()
+  cmplx_vec<cmplx_vec> img_data2d(n_imgs, cmplx_vec (Nx*Ny*Nz, 0)); // create 2D vector tosave images thread safety
+
+  for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
+
+    // check for keyboard interrupt
+    if (PyErr_CheckSignals() != 0)
+      throw py::error_already_set();
+
+    taskIndex = (*taskList)[world.rank()].at(ii);
+
+    NSlice = sliceList(taskIndex);
+    NRep   = repList(taskIndex);
+    NAvg   = avgList(taskIndex);
+    NEcho  = echoList(taskIndex);
+    NPhase = phaseList(taskIndex);
+
+    std::cout << "NSlice = " << NSlice << std::endl;
+    std::cout << "NRep   = " << NRep   << std::endl;
+    std::cout << "NAvg   = " << NAvg   << std::endl;
+    std::cout << "NEcho  = " << NEcho  << std::endl;
+    std::cout << "NPhase = " << NPhase << std::endl;
+    
+
     //Col<float> FM;
     Col<float> fmSlice;
     //Col<std::complex<float>> sen;
-   	Col<std::complex<float>> senSlice;
+ 	  Col<std::complex<float>> senSlice;
     Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
-    uword L_save;
-    double FM_range;
-    double FM_range_ref;
-	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
-		for (uword NEcho = 0; NEcho <= NEchoMax; NEcho++) {
-          for (uword NAvg = 0; NAvg <= NAvgMax; NAvg++) {
-             for (uword NRep = 0; NRep < NRepMax +1; NRep++) {
-
-                      // check for keyboard interrupt
-                      if (PyErr_CheckSignals() != 0)
-                        throw py::error_already_set();
-
-                      filename = outFile + "_" + "Slice" + std::to_string(NSlice) +
+                      filename = outputImageFilePath + baseFilename + "_" + "Slice" + std::to_string(NSlice) +
           								"_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
           								"_" + "Echo" + std::to_string(NEcho) + "_" + "Phase" + std::to_string(NPhase);
-
+ 
 	                      senSlice = getISMRMRDCompleteSENSEMap<std::complex<float>>(d, sen, NSlice, Nx*Ny*Nz);
 						            fmSlice = getISMRMRDCompleteFieldMap<float>(d, FM, NSlice, (uword) (Nx*Ny*Nz));
 	                      getCompleteISMRMRDAcqData<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
 			                    kz, tvec);
-
-                          // Deal with the number of time segments
-						            if(L==-1) {
-							            switch(type) {
-								            case 1:
-									            L = ceil((arma::max(tvec) - arma::min(tvec))/2E-3);
-								            break;
-								            case 2:
-									            L = ceil((arma::max(tvec) - arma::min(tvec))/3E-3);
-								            break;
-								            case 3:
-									            L = ceil((arma::max(tvec) - arma::min(tvec))/3E-3);
-								            break;
-								            default: 
-									          L = 0;
-							            }
-							            std::cout << "Info: Setting L = " << L << " by default." << std::endl; 
-						            }
 
                       // Adapt number of time segments based on the range of the field map
                       L_save = L;
@@ -254,12 +325,13 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
                               Ny, Nz, tvec, NIter);
                       }
+
                     if (!outFile.empty())
                       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
                       
                     // save data for Python conversion
-                    for(int ii = 0; ii < Nx * Ny * Nz; ii++)
-                      img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+                    for(int j = 0; j < Nx * Ny * Nz; j++)
+                      img_data2d[j].push_back(static_cast<std::complex<float>>(ImageTemp(j)));
 
                     // set L back to original value
                     L = L_save;
@@ -267,11 +339,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                     // check for keyboard interrupt
                     if (PyErr_CheckSignals() != 0)
                       throw py::error_already_set();
-                  
-                  }
-                }
-            }
-        }
+
+                    
     }
 
   // copy image data to pybind dict  
