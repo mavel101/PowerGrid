@@ -222,7 +222,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                         L = (int) (L*sqrt(FM_range/FM_range_ref));
                         if (L>15)
                           L = 15; // more than 15 time segments takes long time and does not lead to good results
-                        std::cout << "Adapting time segments to L = " << L << " based on Field Map absolute mean value." << std::endl; 
+                        std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
                       }
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
