@@ -44,6 +44,10 @@ class CMakeBuild(build_ext):
                       '-DOPENACC_MP=ON',
                       '-DMPISupport=ON']
 
+        # Pile all .so in one place and use $ORIGIN as RPATH
+        cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]
+        cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
+
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
