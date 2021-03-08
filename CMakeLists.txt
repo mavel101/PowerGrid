@@ -162,7 +162,7 @@ target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 
 # Python bindings
 add_subdirectory(pybind11)
-pybind11_add_module(PowerGridPy ./PowerGrid/PowerGridPy.cpp)
+pybind11_add_module(PowerGridPy MODULE ./PowerGrid/Python/PowerGridPy.cpp)
 target_link_libraries(PowerGridPy PRIVATE ${LIBS} PowerGrid)
 
 add_subdirectory(PowerGrid/lowRank)

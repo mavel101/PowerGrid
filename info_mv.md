@@ -5,7 +5,7 @@
 For Compiling install packages listed in docker/powergrid-dev.  
 Armadillo should be version 9.900.x .
 Compiling is working with newer versions of ISMRMRD (e.g. 1.4.2).  
-Cmake should be compiled with OPENACC_GPU=OFF und OPENACC_MP=ON/OFF if no CUDA is available (change in CMakeLists.txt).  
+Cmake should be compiled with OPENACC_GPU=OFF if no CUDA is available, which is the default.  
 
 For Compiling:  
 mkdir build  
@@ -24,24 +24,26 @@ cmake ..
 make
 sudo make install
 
-For installing the wrapper just run `pip install .` from the PowerGrid root directory. This installs the module PowerGridPy.
-For information run:
+For installing the wrapper use the script pip_install.sh. It has 3 different options for compiling, that can be passed as an argument:
+
+- "nonpgi" : to compile withouth PGI compilers
+- "pgi" : compile with PGI compilers
+- "pgigpu": compile with PGI compilers and GPU acceleration
+
+For compiling with PGI, Nvidia HPC-SDK 20.11 has to be installed and the compiler has to be in the PATH.
+Pass "set_hpcsdk" as 2nd argument to pip_install.sh to set environment variables for the PGI compiler (might have to check the compiler paths in the script)
+Boost, SuperLU5 and Armadillo can optionally also be compiled with PGI compilers, see Dockerfile for instructions.
+
+IMPORTANT: For compiling with Pybind11 & PGI, the CXX Standard in CMakeLists.txt has to be CMAKE_CXX_STANDARD 14.
+
+Import the module inside Python with:
 
 ```python
 from PowerGridPy import PowerGridIsmrmrd
+from PowerGridPyMPI import PowerGridSenseMPI
 PowerGridIsmrmrd.__doc__
 ```
 
-## Compile with PGI Compilers
-
-The PGI Compiler has to be in the PATH. Boost, SuperLU5 and Armadillo should also be compiled with PGI compilers.
-See docker/pg-hpcsdk/Dockerfile for information on how to set everything up.
-
-For Compiling with PGI compilers run:
-cmake .. -DCMAKE_CXX_COMPILER=pgc++ instead of cmake ..
-
-If the Python Wrapper should be compiled with PGI compilers, use setupPGI.py instead of setup.py.
-IMPORTANT: For compiling with Pybind11 & PGI, the CXX Standard in CMakeLists.txt has to be CMAKE_CXX_STANDARD 14.
 
 ## Debugging in VS Code
 
