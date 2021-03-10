@@ -32,7 +32,7 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
 py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
-                     std::string FourierTrans, int timesegs, double beta, int niter, int regDims) {
+                     std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims, bool ts_adapt) {
 
   // save image data and metadata in a dict
   py::dict imgs;
@@ -213,16 +213,16 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 						            }
 
                       // Adapt number of time segments based on the range of the field map
-                      L_save = L;
-                      if (NSlice==0){
-                        FM_range_ref = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
-                      }
-                      else{
-                        FM_range = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
-                        L = (int) (L*sqrt(FM_range/FM_range_ref));
-                        if (L>15)
-                          L = 15; // more than 15 time segments takes long time and does not lead to good results
-                        std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
+                      if (ts_adapt){
+                        L_save = L;
+                        if (NSlice==0){
+                          FM_range_ref = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
+                        }
+                        else{
+                          FM_range = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
+                          L = (int) (L*sqrt(FM_range/FM_range_ref));
+                          std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
+                        }
                       }
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
@@ -314,6 +314,6 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
                 py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
-                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
+                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("ts_adapt")=false, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
         );
 }
