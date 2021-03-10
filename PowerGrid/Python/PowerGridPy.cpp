@@ -32,7 +32,7 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
 py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
-                     std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims, bool ts_adapt) {
+                     std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims) {
 
   // save image data and metadata in a dict
   py::dict imgs;
