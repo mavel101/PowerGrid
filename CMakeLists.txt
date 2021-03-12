@@ -8,8 +8,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 project("PowerGrid" C CXX)
 
-option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" OFF)
-option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " ON)
+option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" ON)
+option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " OFF)
 option(MPISupport "Enable MPI Support" ON)
 
 if(OPENACC_GPU AND OPENACC_MP)
@@ -164,6 +164,7 @@ target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 add_subdirectory(pybind11)
 pybind11_add_module(PowerGridPy MODULE ./PowerGrid/Python/PowerGridPy.cpp)
 target_link_libraries(PowerGridPy PRIVATE ${LIBS} PowerGrid)
+set_target_properties(PowerGrid PROPERTIES PREFIX "")
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
