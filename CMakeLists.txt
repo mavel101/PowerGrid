@@ -161,7 +161,6 @@ add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
 target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 
 # Python bindings
-add_subdirectory(pybind11)
 pybind11_add_module(PowerGridPy MODULE ./PowerGrid/Python/PowerGridPy.cpp)
 target_link_libraries(PowerGridPy PRIVATE ${LIBS} PowerGrid)
 set_target_properties(PowerGrid PROPERTIES PREFIX "")
