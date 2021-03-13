@@ -39,6 +39,8 @@ if(Python_FOUND)
 	set(LIBS ${LIBS} ${PYTHON_LIBRARIES})
 	include_directories(${Python_INCLUDE_DIRS})
 endif()
+# Find pybind11 for Python bindings
+find_package(pybind11 CONFIG)
 
 set(CUDAVER 10.0)
 set(PGI_YEAR 2019)
