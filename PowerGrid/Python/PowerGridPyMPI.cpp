@@ -47,7 +47,7 @@ namespace bmpi = boost::mpi;
 typedef std::vector<std::complex<float>> cmplx_vec;
 typedef std::vector<std::vector<std::complex<float>>> cmplx_vec2d;
 
-py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
+py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string TSInterp,
                      std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims) {
 
   // save image data and metadata in a dict
@@ -57,7 +57,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
   uword Ny = ny;
   uword Nz = nz;
   uword NShots = nShots;
-  uword L = timesegs;
+  sword L = timesegs;
   uword NIter = niter;
   uword dims2penalize = regDims;
   uword FtType = 1, type = 1;
@@ -242,7 +242,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
   std::cout << "Rank = " << world.rank() << std::endl;
 
   uword NSlice, NRep, NAvg, NEcho, NPhase;
-  uword L_save;
+  sword L_save;
   double FM_range;
   double FM_range_ref;
 

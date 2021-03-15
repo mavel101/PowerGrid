@@ -31,7 +31,7 @@ namespace py = pybind11;
 typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
-py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string  TSInterp,
+py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string TSInterp,
                      std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims) {
 
   // save image data and metadata in a dict
@@ -42,7 +42,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   uword Ny = ny;
   uword Nz = nz;
   uword NShots = nShots;
-  uword L = timesegs;
+  sword L = timesegs;
   uword NIter = niter;
   uword dims2penalize = regDims;
   uword FtType = 1, type = 1;
@@ -173,7 +173,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
-    uword L_save;
+    sword L_save;
     double FM_range;
     double FM_range_ref;
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
