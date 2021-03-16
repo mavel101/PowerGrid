@@ -41,7 +41,8 @@ class CMakeBuild(build_ext):
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DOPENACC_GPU=OFF',
                       '-DOPENACC_MP=OFF',
-                      '-DMPISupport=ON']
+                      '-DMPISupport=OFF'
+                      '-DPythonBindings=ON']
 
         # Pile all .so in one place and use $ORIGIN as RPATH
         cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]

@@ -42,7 +42,8 @@ class CMakeBuild(build_ext):
                       '-DCMAKE_CXX_COMPILER=pgc++',
                       '-DOPENACC_GPU=ON',
                       '-DOPENACC_MP=OFF',
-                      '-DMPISupport=ON']
+                      '-DMPISupport=OFF',
+                      '-DPythonBindings=ON']
 
         # Pile all .so in one place and use $ORIGIN as RPATH
         cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]
