@@ -164,15 +164,15 @@ target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
 
-if (MPISupport)
-    add_subdirectory(PowerGrid/MPI)
-endif (MPISupport)
-
 # Python bindings
 if(PythonBindings)
     add_subdirectory(pybind11)
     add_subdirectory(PowerGrid/Python)
 endif()
+
+if (MPISupport)
+    add_subdirectory(PowerGrid/MPI)
+endif (MPISupport)
 
 # Manage installing targets to sane locations in /opt
 install(TARGETS PowerGridPcSense DESTINATION bin)
