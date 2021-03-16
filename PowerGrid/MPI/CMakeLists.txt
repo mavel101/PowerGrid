@@ -44,3 +44,11 @@
     install(TARGETS PowerGridPcSenseMPI DESTINATION bin)
     install(TARGETS PowerGridSenseMPI DESTINATION bin)
     install(TARGETS PowerGridPcSenseMPI_TS DESTINATION bin)
+
+    # The MPI version of PowerGrid did not work on my system
+    # If the MPI version works, the Bindings should work as well, but I didnt test them
+    # so MPI Support is by default turned of for Python Bindings (in setup.py 's)
+    if (MPISupport)
+      pybind11_add_module(PowerGridPyMPI MODULE ../Python/PowerGridPyMPI.cpp)
+      target_link_libraries(PowerGridPyMPI PRIVATE ${mpiLIBS} PowerGrid)
+    endif()
