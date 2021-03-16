@@ -13,7 +13,7 @@
  *****************************************************************************/
 
 // //Project headers.
-#include "../PowerGrid.h"
+#include "PowerGrid.h"
 #include "../processIsmrmrd.hpp"
 #include "../processNIFTI.hpp"
 #include <boost/program_options.hpp>

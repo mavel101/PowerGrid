@@ -16,13 +16,8 @@ sudo make install
 
 ## Compile Python wrapper
 
-Python wrapper depends on Pybind11. Pybind11 is added as a submodule and can be installed with
-cd pybind11
-mkdir build
-cd build
-cmake ..
-make
-sudo make install
+Python wrapper depends on Pybind11. Pybind11 is added as a submodule, which has to be pulled with git submodule update --init. 
+There is no need to install Pybind11.
 
 For installing the wrapper use the script pip_install.sh. It has 3 different options for compiling, that can be passed as an argument:
 

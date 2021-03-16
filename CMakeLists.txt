@@ -11,6 +11,7 @@ project("PowerGrid" C CXX)
 option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" ON)
 option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " OFF)
 option(MPISupport "Enable MPI Support" ON)
+option(PythonBindings "Enable Python Bindings" OFF)
 
 if(OPENACC_GPU AND OPENACC_MP)
 	message(FATAL_ERROR "You cannot build with both OPENACC_GPU AND OPENACC_MP at the same time")
@@ -123,8 +124,8 @@ else()
 	add_definitions(-DBOOST_NO_ALIGNMENT)
 		if(OPENACC_GPU)
 			add_definitions(-DOPENACC_GPU)
-			#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mp -Mnollvm -Mcuda -Minfo=accel -fast -acc -ta=tesla:cc35,cc60,cc75,flushz -pgf90libs")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -acc -pgf90libs")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mp -Mnollvm -Mcuda -Minfo=accel -fast -acc -ta=tesla:cc35,cc60,cc75,flushz,managed -pgf90libs")
+			#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -acc -pgf90libs")
 		elseif(OPENACC_MP)
 			add_definitions(-DOPENACC_MP)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mnollvm -O1 -Minfo=accel -acc  -ta=multicore -pgf90libs")
@@ -160,18 +161,18 @@ set(POWERGRID_PCSENSE_TIMESEG
 add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
 target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
 
-# Python bindings
-add_subdirectory(pybind11)
-pybind11_add_module(PowerGridPy MODULE ./PowerGrid/Python/PowerGridPy.cpp)
-target_link_libraries(PowerGridPy PRIVATE ${LIBS} PowerGrid)
-set_target_properties(PowerGrid PROPERTIES PREFIX "")
-
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
 
 if (MPISupport)
     add_subdirectory(PowerGrid/MPI)
 endif (MPISupport)
+
+# Python bindings
+if(PythonBindings)
+    add_subdirectory(pybind11)
+    add_subdirectory(PowerGrid/Python)
+endif()
 
 # Manage installing targets to sane locations in /opt
 install(TARGETS PowerGridPcSense DESTINATION bin)
