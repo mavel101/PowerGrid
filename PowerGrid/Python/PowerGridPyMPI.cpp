@@ -31,7 +31,6 @@ Developed by:
 #include "PowerGrid.h"
 #include "processIsmrmrd.hpp"
 #include "processNIFTI.hpp"
-#include <boost/program_options.hpp>
 #include <chrono>
 
 #include "pybind11/pybind11.h"
