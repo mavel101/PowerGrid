@@ -76,6 +76,10 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
         type = 2;
       } else if (TSInterp.compare("histo") == 0) {
         type = 3;
+        #ifdef OPENACC_GPU
+        std::cout << "Histo mode is buggy on GPU. Acceptable values are hanning or minmax." << std::endl
+        return imgs;
+        #endif
       } else {
         std::cout << "Did not recognize temporal interpolator selection. " << std::endl
                   << "Acceptable values are hanning or minmax."            << std::endl;
@@ -374,7 +378,7 @@ PYBIND11_MODULE(PowerGridPyMPI, m) {
                     niter: int\n\\
                         Number of CG iterations (default=10)\n\\
                     TSInterp: string\n\\
-                        Field Correction Interpolator (histo (default), hanning or minmax)\n\\
+                        Field Correction Interpolator (minmax (default), hanning or histo (buggy in GPU mode))\n\\
                     beta: float\n\\
                         Spatial regularization penalty weight (default=0)\n\\
                     regDims: int\n\\
@@ -386,7 +390,7 @@ PYBIND11_MODULE(PowerGridPyMPI, m) {
                 Returns\n\\
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
-                py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
+                py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="minmax",
                  py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("ts_adapt")=false, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
         );
 }
