@@ -103,6 +103,10 @@ set(PG_FILES
 	${PROJECT_SOURCE_DIR}/PowerGrid/reconSupport/directRecon.cpp
 )
 
+# Disable automatic vector pipeling for Time Segmentation as it leads to errors in the "histo" option
+# See https://www.pgroup.com/resources/docs/19.10/x86/pgi-user-guide/index.htm#gs-perform-fast
+set_source_files_properties(TimeSegmentation.cpp PROPERTIES COMPILE_FLAGS -Mnovect) 
+
 add_library(PowerGrid SHARED ${PG_FILES})
 target_link_libraries(PowerGrid ${LIBS})
 

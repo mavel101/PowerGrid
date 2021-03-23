@@ -76,10 +76,6 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
         type = 2;
       } else if (TSInterp.compare("histo") == 0) {
         type = 3;
-        #ifdef OPENACC_GPU
-        std::cout << "Histo mode is buggy on GPU. Acceptable values are hanning or minmax." << std::endl;
-        return imgs;
-        #endif
       } else {
         std::cout << "Did not recognize temporal interpolator selection. " << std::endl
                   << "Acceptable values are hanning or minmax."            << std::endl;
