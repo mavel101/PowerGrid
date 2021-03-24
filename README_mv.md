@@ -5,7 +5,6 @@
 For Compiling install packages listed in docker/powergrid-dev.  
 Armadillo should be version 9.900.x .
 Compiling is working with newer versions of ISMRMRD (e.g. 1.4.2).  
-Cmake should be compiled with OPENACC_GPU=OFF if no CUDA is available, which is the default.  
 
 For Compiling:  
 mkdir build  
@@ -19,23 +18,22 @@ sudo make install
 Python wrapper depends on Pybind11. Pybind11 is added as a submodule, which has to be pulled with git submodule update --init. 
 There is no need to install Pybind11.
 
-For installing the wrapper use the script pip_install.sh. It has 3 different options for compiling, that can be passed as an argument:
+For installing the wrapper use the setup.py's from PowerGrid/Python. There are 3 different options for compiling:
 
-- "nonpgi" : to compile withouth PGI compilers
-- "pgi" : compile with PGI compilers
-- "pgigpu": compile with PGI compilers and GPU acceleration
+- "setup_CPU.py" : compile for multi-core CPU support
+- "setup_GPU.py": compile for GPU support (only on Nvidia GPU)
 
 For compiling with PGI, Nvidia HPC-SDK 20.11 has to be installed and the compiler has to be in the PATH.
 Pass "set_hpcsdk" as 2nd argument to pip_install.sh to set environment variables for the PGI compiler (might have to check the compiler paths in the script)
 Boost, SuperLU5 and Armadillo can optionally also be compiled with PGI compilers, see Dockerfile for instructions.
+For compiling with Pybind11 & PGI, the CXX Standard in CMakeLists.txt has to be CMAKE_CXX_STANDARD 14.
 
-IMPORTANT: For compiling with Pybind11 & PGI, the CXX Standard in CMakeLists.txt has to be CMAKE_CXX_STANDARD 14.
+For an easier build, install Docker & Nvidia Docker and use Dockerfiles from https://github.com/pehses/python-ismrmrd-server/tree/pulseq/docker.
 
 Import the module inside Python with:
 
 ```python
 from PowerGridPy import PowerGridIsmrmrd
-from PowerGridPyMPI import PowerGridSenseMPI
 PowerGridIsmrmrd.__doc__
 ```
 
