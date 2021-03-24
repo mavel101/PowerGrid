@@ -241,7 +241,7 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
   std::cout << "Rank = " << world.rank() << std::endl;
 
   uword NSlice, NRep, NAvg, NEcho, NPhase;
-  sword L_save;
+  sword L_save = 0;
   double FM_range;
   double FM_range_ref;
 
@@ -338,7 +338,8 @@ py::dict PowerGridSenseMPI(std::string inFile, std::string outFile, int nx, int 
                       img_data2d[ii][j] = static_cast<std::complex<float>>(ImageTemp(j));
 
                     // set L back to original value
-                    L = L_save;
+                    if (ts_adapt)
+                      L = L_save;
 
                     // check for keyboard interrupt
                     if (PyErr_CheckSignals() != 0)

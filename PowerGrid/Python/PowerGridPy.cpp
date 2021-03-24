@@ -172,7 +172,7 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
-    sword L_save;
+    sword L_save=0;
     double FM_range;
     double FM_range_ref;
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
@@ -261,7 +261,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                       img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
 
                     // set L back to original value
-                    L = L_save;
+                    if (ts_adapt)
+                      L = L_save;
 
                     // check for keyboard interrupt
                     if (PyErr_CheckSignals() != 0)
