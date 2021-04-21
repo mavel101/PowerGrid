@@ -179,6 +179,7 @@ if (MPISupport)
 endif (MPISupport)
 
 # Manage installing targets to sane locations in /opt
+install(TARGETS PowerGridPcSenseTimeSeg DESTINATION bin)
 install(TARGETS PowerGridPcSense DESTINATION bin)
 install(TARGETS PowerGridIsmrmrd DESTINATION bin)
 install(TARGETS PowerGrid DESTINATION lib)
