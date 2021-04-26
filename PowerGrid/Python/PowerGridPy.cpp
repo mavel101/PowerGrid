@@ -78,9 +78,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   acqTracking *acqTrack;
   Col<float> FM;
   Col<std::complex<float>> sen;
-  processISMRMRDInput<float>(inFile, d, hdr, FM, sen, acqTrack);
-  if (pcSENSE)
-    arma::Col<float> PMap;
+  Col<float> PMap;
+  processISMRMRDInput<float>(inFile, d, hdr, FM, sen, acqTrack);    
 
   //std::cout << "Number of elements in SENSE Map = " << sen.n_rows << std::endl;
   //std::cout << "Number of elements in Field Map = " << FM.n_rows << std::endl;
@@ -177,6 +176,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
     sword L_save=0;
     double FM_range;
     double FM_range_ref;
+    uword NSet = 0;
+	  uword NSeg = 0;
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
 		for (uword NEcho = 0; NEcho <= NEchoMax; NEcho++) {
           for (uword NAvg = 0; NAvg <= NAvgMax; NAvg++) {
@@ -230,32 +231,25 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                         }
                       }
 
+                      std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
+                      std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
+                      std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
+                      std::cout << "Number of rows in data = " << data.n_rows << std::endl;
+                      std::cout << "Number of columns in data = " << data.n_cols << std::endl;
+
+                      QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
+
                       // Do additional Phase Correction if selected
                       if (pcSENSE){
-                        std::cout << "Number of elements in SMap = " << SMap.n_rows << std::endl;
-                        std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
-                        std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
-                        std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
                         std::cout << "Number of rows in phase map = " << PMap.n_rows << std::endl;
-                        std::cout << "Number of rows in data = " << data.n_rows << std::endl;
-                        std::cout << "Number of columns in data = " << data.n_cols << std::endl;
 
-                        pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, type, SMap, FMap, 0-PMap);
+                        pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, type, senSlice, fmSlice, 0-PMap);
                         QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
 
                         ImageTemp = reconSolve<float, pcSenseTimeSeg<float>, QuadPenalty<float>>(data, S_DWI, R, kx, ky, kz,
                             Nx, Ny, Nz, tvec, NIter);
                       }
                       else{
-
-                        std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
-                        std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
-                        std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
-                        std::cout << "Number of rows in data = " << data.n_rows << std::endl;
-                        std::cout << "Number of columns in data = " << data.n_cols << std::endl;
-
-                        QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
-
                         if (FtType == 1) {
                           Gnufft<float> G(kx.n_rows, (float) 2.0, Nx, Ny, Nz, kx, ky, kz, ix,
                             iy, iz);
@@ -325,7 +319,7 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     timesegs : int\n\\
                         Number of time segments for B0 correction - 0: no B0 correction, -1 (default): segments will be determined from readout duration\n\\
                     ts_adapt: bool\n\\
-                        If activated, the number of time segments used for each slice is adapted based on field map range
+                        If activated, the number of time segments used for each slice is adapted based on field map range\n\\
                     niter: int\n\\
                         Number of CG iterations (default=10)\n\\
                     TSInterp: string\n\\
@@ -339,8 +333,8 @@ PYBIND11_MODULE(PowerGridPy, m) {
                     nx, ny, nz : int\n\\
                         Image size in x,y,z. Default is 0, then sizes are read from ISRMRD header encoded space.\n\\
                     pcSENSE: bool\n\\
-                        If activated, additional phase correction is performed (a phase map has to be provided for each shot in the ISMRMRD file)
-                        If pcSENSE is used, the Fourier Transform is always a NUFFT.
+                        If activated, additional phase correction is performed (a phase map has to be provided for each shot in the ISMRMRD file)\n\\
+                        If pcSENSE is used, the Fourier Transform is always a NUFFT.\n\\
                 Returns\n\\
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
