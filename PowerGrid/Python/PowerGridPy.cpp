@@ -31,7 +31,7 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 //using namespace PowerGrid;
 
 py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int ny, int nz, int nShots, std::string TSInterp,
-                     std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims) {
+                     std::string FourierTrans, int timesegs, bool ts_adapt, double beta, int niter, int regDims, bool pcSENSE) {
 
   // save image data and metadata in a dict
   py::dict imgs;
@@ -79,6 +79,8 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
   Col<float> FM;
   Col<std::complex<float>> sen;
   processISMRMRDInput<float>(inFile, d, hdr, FM, sen, acqTrack);
+  if (pcSENSE)
+    arma::Col<float> PMap;
 
   //std::cout << "Number of elements in SENSE Map = " << sen.n_rows << std::endl;
   //std::cout << "Number of elements in Field Map = " << FM.n_rows << std::endl;
@@ -193,6 +195,10 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
 	                      getCompleteISMRMRDAcqData<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
 			                    kz, tvec);
 
+                        if(pcSENSE)
+                          PMap = getISMRMRDCompletePhaseMap<float>(d, NSlice, NSet, NRep, NAvg, NPhase, NEcho, NSeg,
+                                        (uword) (Nx*Ny*Nz));
+						
                           // Deal with the number of time segments
 						            if(L==-1) {
 							            switch(type) {
@@ -224,35 +230,55 @@ py::dict PowerGridIsmrmrd(std::string inFile, std::string outFile, int nx, int n
                         }
                       }
 
-	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
-	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
-	                    std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
-	                    std::cout << "Number of rows in data = " << data.n_rows << std::endl;
-	                    std::cout << "Number of columns in data = " << data.n_cols << std::endl;
+                      // Do additional Phase Correction if selected
+                      if (pcSENSE){
+                        std::cout << "Number of elements in SMap = " << SMap.n_rows << std::endl;
+                        std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
+                        std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
+                        std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
+                        std::cout << "Number of rows in phase map = " << PMap.n_rows << std::endl;
+                        std::cout << "Number of rows in data = " << data.n_rows << std::endl;
+                        std::cout << "Number of columns in data = " << data.n_cols << std::endl;
 
-	                    QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
+                        pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, type, SMap, FMap, 0-PMap);
+                        QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
 
-                      if (FtType == 1) {
-	                      Gnufft<float> G(kx.n_rows, (float) 2.0, Nx, Ny, Nz, kx, ky, kz, ix,
-			                    iy, iz);
-	                      TimeSegmentation<float, Gnufft<float>> A(G, fmSlice, tvec, kx.n_rows, Nx*Ny*Nz, L, type, NShots);
-                        SENSE<float, TimeSegmentation<float, Gnufft<float>>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, TimeSegmentation<float, Gnufft<float>>>,
-			                    QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-			                    Ny, Nz, tvec, NIter);
-                      } else if (FtType == 2) {
-                        Gdft<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec);
-	                      SENSE<float, Gdft<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, Gdft<float>>,
-	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-                              Ny, Nz, tvec, NIter);
-                      } else if (FtType == 3) {
-                        GdftR2<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec,Nx,Ny,Nz);
-	                      SENSE<float, GdftR2<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, GdftR2<float>>,
-	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-                              Ny, Nz, tvec, NIter);
+                        ImageTemp = reconSolve<float, pcSenseTimeSeg<float>, QuadPenalty<float>>(data, S_DWI, R, kx, ky, kz,
+                            Nx, Ny, Nz, tvec, NIter);
                       }
+                      else{
+
+                        std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
+                        std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
+                        std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
+                        std::cout << "Number of rows in data = " << data.n_rows << std::endl;
+                        std::cout << "Number of columns in data = " << data.n_cols << std::endl;
+
+                        QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
+
+                        if (FtType == 1) {
+                          Gnufft<float> G(kx.n_rows, (float) 2.0, Nx, Ny, Nz, kx, ky, kz, ix,
+                            iy, iz);
+                          TimeSegmentation<float, Gnufft<float>> A(G, fmSlice, tvec, kx.n_rows, Nx*Ny*Nz, L, type, NShots);
+                          SENSE<float, TimeSegmentation<float, Gnufft<float>>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+                          ImageTemp = reconSolve<float, SENSE<float, TimeSegmentation<float, Gnufft<float>>>,
+                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
+                            Ny, Nz, tvec, NIter);
+                        } else if (FtType == 2) {
+                          Gdft<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec);
+                          SENSE<float, Gdft<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+                          ImageTemp = reconSolve<float, SENSE<float, Gdft<float>>,
+                                QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
+                                Ny, Nz, tvec, NIter);
+                        } else if (FtType == 3) {
+                          GdftR2<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec,Nx,Ny,Nz);
+                          SENSE<float, GdftR2<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+                          ImageTemp = reconSolve<float, SENSE<float, GdftR2<float>>,
+                                QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
+                                Ny, Nz, tvec, NIter);
+                        }
+                    }
+
                     if (!outFile.empty())
                       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
                       
@@ -298,6 +324,8 @@ PYBIND11_MODULE(PowerGridPy, m) {
                         Fourier Transform (NUFFT (default), DFT or DFTGrads)\n\\
                     timesegs : int\n\\
                         Number of time segments for B0 correction - 0: no B0 correction, -1 (default): segments will be determined from readout duration\n\\
+                    ts_adapt: bool\n\\
+                        If activated, the number of time segments used for each slice is adapted based on field map range
                     niter: int\n\\
                         Number of CG iterations (default=10)\n\\
                     TSInterp: string\n\\
@@ -310,10 +338,14 @@ PYBIND11_MODULE(PowerGridPy, m) {
                         Number of Shots (default: 1)\n\\
                     nx, ny, nz : int\n\\
                         Image size in x,y,z. Default is 0, then sizes are read from ISRMRD header encoded space.\n\\
+                    pcSENSE: bool\n\\
+                        If activated, additional phase correction is performed (a phase map has to be provided for each shot in the ISMRMRD file)
+                        If pcSENSE is used, the Fourier Transform is always a NUFFT.
                 Returns\n\\
                     Dict containing the image vector and corresponding shapes. Image shape can be regained doing:\n\\
                     np.asarray(dict[\"img_data\"]).reshape(dict[\"shapes\"])\n",
                 py::arg("inFile"), py::arg("outFile")="", py::arg("nx")=0, py::arg("ny")=0, py::arg("nz")=0, py::arg("nShots")=1, py::arg("TSInterp")="histo",
-                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("ts_adapt")=false, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3
+                 py::arg("FourierTrans")="NUFFT", py::arg("timesegs")=-1, py::arg("ts_adapt")=false, py::arg("beta")=0.0, py::arg("niter")=10, py::arg("regDims")=3,
+                 py::arg("pcSENSE")=false
         );
 }
