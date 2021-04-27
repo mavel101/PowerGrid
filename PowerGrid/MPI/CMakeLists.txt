@@ -10,6 +10,9 @@
             PowerGridPcSenseMPI.cpp
             )
 
+    # Include cnpy
+    include_directories(../../cnpy)
+
     add_executable(PowerGridPcSenseMPI ${mpi_POWERGRID_PcSense})
     find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
@@ -38,8 +41,8 @@
 
 
     target_link_libraries(PowerGridPcSenseMPI ${mpiLIBS} PowerGrid)
-    target_link_libraries(PowerGridSenseMPI ${mpiLIBS} PowerGrid)
-    target_link_libraries(PowerGridPcSenseMPI_TS ${mpiLIBS} PowerGrid)
+    target_link_libraries(PowerGridSenseMPI ${mpiLIBS} PowerGrid cnpy)
+    target_link_libraries(PowerGridPcSenseMPI_TS ${mpiLIBS} PowerGrid cnpy)
     
     install(TARGETS PowerGridPcSenseMPI DESTINATION bin)
     install(TARGETS PowerGridSenseMPI DESTINATION bin)

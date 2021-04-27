@@ -33,11 +33,14 @@ Developed by:
 #include "processNIFTI.hpp"
 
 #include <boost/program_options.hpp>
+#include "cnpy.h"
 
 namespace po = boost::program_options;
 namespace bmpi = boost::mpi;
 
 //using namespace PowerGrid;
+
+typedef std::vector<std::complex<float>> cmplx_vec;
 
 int main(int argc, char** argv)
 {
@@ -50,12 +53,14 @@ int main(int argc, char** argv)
     //uword  type, L = 0;
     double beta = 0.0;
     uword dims2penalize = 3;
+    bool writeNifti;
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "produce help message")(
         "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
         "input ISMRMRD Raw Data file")
-        ("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for NIFTIimages")
-		("Nx,x", po::value<uword>(&Nx), "Image size in X")
+ 		("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for Numpy files and NIFTIimages")
+		("writeNifti,w", po::bool_switch(&writeNifti)->default_value(false), "Write each image in own Nifti file if selected.")
+        ("Nx,x", po::value<uword>(&Nx), "Image size in X")
 		("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 		("Nz,z", po::value<uword>(&Nz), "Image size in Z")
         ("NShots,s", po::value<uword>(&NShots), "Number of shots per image")
@@ -66,21 +71,38 @@ int main(int argc, char** argv)
 
     po::variables_map vm;
 
-    try {
+	try {
 
-        po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
 
-        if (vm.count("help")) {
-            std::cout << desc << std::endl;
-            return 1;
+		if (vm.count("help")) {
+			std::cout << desc << std::endl;
+			return 1;
+		}
+
+      if(!vm.count("TimeSegmentationInterp")) {
+        type = 1;
+      } else {
+        if (TimeSegmentationInterp.compare("hanning") == 0) {
+          type = 1;
+        } else if (TimeSegmentationInterp.compare("minmax") == 0) {
+          type = 2;
+        } else if (TimeSegmentationInterp.compare("histo") == 0) {
+          type = 3;
+        } else {
+          std::cout << "Did not recognize temporal interpolator selection. " << std::endl
+                    << "Acceptable values are hanning or minmax."            << std::endl;
+          return 1;
         }
+      }
 
-    } catch (boost::program_options::error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        std::cout << desc << std::endl;
-        return 1;
-    }
+
+  } catch (boost::program_options::error &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    std::cout << desc << std::endl;
+    return 1;
+  }
 
     arma::Col<float> FM;
     arma::Col<std::complex<float> > sen;
@@ -231,6 +253,12 @@ int main(int argc, char** argv)
 
     uword NSlice, NRep, NAvg, NEcho, NPhase;
     uword NSet = 0, NSeg = 0;
+
+    // Image vector for conversion to Numpy Array
+    int vec_rows = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
+    cmplx_vec2d img_data(vec_rows);
+    int idx;
+
     for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
 
         taskIndex = (*taskList)[world.rank()].at(ii);
@@ -291,8 +319,16 @@ int main(int argc, char** argv)
         ImageTemp = reconSolve<float, pcSenseTimeSeg<float>, QuadPenalty<float> >(data, S_DWI, R, kx, ky, kz, Nx,
             Ny, Nz, tvec, NIter);
         
-        writeNiftiMagPhsImage<float>(filename, ImageTemp, Nx, Ny, Nz);
+        if (writeNifti)
+            writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+
+        // save data for Python conversion
+        idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
+        for(int ii = 0; ii < Nx * Ny * Nz; ii++)
+            img_data[idx].push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
     }
+
+    cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data[0],{NSliceMax,NPhaseMax,NEchoMax,NAvgMax,NRepMax,Nz,Ny,Nx},"w");
 
     // Close ISMRMRD::Dataset, hdr, and acqTrack
     closeISMRMRDData(d, hdr, acqTrack);

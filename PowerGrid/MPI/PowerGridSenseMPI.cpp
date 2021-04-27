@@ -33,8 +33,12 @@ Developed by:
 #include "processNIFTI.hpp"
 #include <boost/program_options.hpp>
 #include <chrono>
+#include "cnpy.h"
+
 namespace po = boost::program_options;
 namespace bmpi = boost::mpi;
+
+typedef std::vector<std::vector<std::complex<float>>> cmplx_vec2d;
 
 int main(int argc, char **argv) {
   std::string rawDataFilePath, outputImageFilePath, senseMapFilePath,
@@ -48,12 +52,14 @@ int main(int argc, char **argv) {
   //uword ;
   double beta = 0.0;
   uword dims2penalize = 3;
+  bool writeNifti;
   po::options_description desc("Allowed options");
   desc.add_options()("help,h", "produce help message")(
       "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
       "input ISMRMRD Raw Data file")
- 			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for NIFTIimages")
-			("Nx,x", po::value<uword>(&Nx), "Image size in X")
+ 			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for Numpy files and NIFTIimages")
+			("writeNifti,w", po::bool_switch(&writeNifti)->default_value(false), "Write each image in own Nifti file if selected.")
+      ("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
           ("NShots,s", po::value<uword>(&NShots), "Number of shots per image")
@@ -251,6 +257,12 @@ int main(int argc, char **argv) {
   std::cout << "Rank = " << world.rank() << std::endl;
 
   uword NSlice, NRep, NAvg, NEcho, NPhase;
+
+  // Image vector for conversion to Numpy Array
+  int vec_rows = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
+  cmplx_vec2d img_data(vec_rows);
+  int idx;
+
   for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
     
     taskIndex = (*taskList)[world.rank()].at(ii);
@@ -314,11 +326,16 @@ int main(int argc, char **argv) {
 	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
                               Ny, Nz, tvec, NIter);
                       }
+                    if (writeNifti)
+                      writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
 
-                    writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
-                    
+                    // save data for Python conversion
+                    idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
+                    for(int ii = 0; ii < Nx * Ny * Nz; ii++)
+                        img_data[idx].push_back(static_cast<std::complex<float>>(ImageTemp(ii))); 
     }
 
+  cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data[0],{NSliceMax,NPhaseMax,NEchoMax,NAvgMax,NRepMax,Nz,Ny,Nx},"w");
 
   // Close ISMRMRD::Dataset, hdr, and acqTrack
 	closeISMRMRDData(d,hdr,acqTrack);

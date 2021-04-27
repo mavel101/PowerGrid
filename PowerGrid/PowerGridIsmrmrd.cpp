@@ -195,6 +195,7 @@ int main(int argc, char **argv) {
     	outputImageFilePath += '/';
 	}
 
+  // Image vector for conversion to Numpy Array
   cmplx_vec img_data;
 
   for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
