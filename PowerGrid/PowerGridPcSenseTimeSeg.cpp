@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
       "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
       "input ISMRMRD Raw Data file")
  			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for Numpy files and NIFTIimages")
-      ("writeNifti, w", po::bool_switch(&writeNifti)->default_value(false), "Write each image in own Nifti file if selected.")
+      ("writeNifti,w", po::bool_switch(&writeNifti)->default_value(false), "Write each image in own Nifti file if selected.")
 			("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
