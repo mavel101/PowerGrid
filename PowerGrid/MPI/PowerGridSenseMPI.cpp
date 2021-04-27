@@ -38,6 +38,7 @@ Developed by:
 namespace po = boost::program_options;
 namespace bmpi = boost::mpi;
 
+typedef std::vector<std::complex<float>> cmplx_vec;
 typedef std::vector<std::vector<std::complex<float>>> cmplx_vec2d;
 
 int main(int argc, char **argv) {
@@ -260,7 +261,8 @@ int main(int argc, char **argv) {
 
   // Image vector for conversion to Numpy Array
   int vec_rows = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
-  cmplx_vec2d img_data(vec_rows);
+  cmplx_vec2d img_data_tmp(vec_rows);
+  cmplx_vec img_data;
   int idx;
 
   for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
@@ -329,10 +331,16 @@ int main(int argc, char **argv) {
                     if (writeNifti)
                       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
 
-                    // save data for Python conversion
+                    // save data for Python conversion - 2D to be thread safe
                     idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
                     for(int ii = 0; ii < Nx * Ny * Nz; ii++)
-                        img_data[idx].push_back(static_cast<std::complex<float>>(ImageTemp(ii))); 
+                        img_data_tmp[idx].push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+    }
+
+    // to 1D vector
+    for(int i = 0; i < vec_rows; i++){
+        for(int j = 0; j < Nx * Ny * Nz; j++)
+            img_data.push_back(img_data_tmp[i][j]);
     }
 
   cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data[0],{NSliceMax,NPhaseMax,NEchoMax,NAvgMax,NRepMax,Nz,Ny,Nx},"w");
