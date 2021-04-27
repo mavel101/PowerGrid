@@ -97,3 +97,5 @@ export LD_LIBRARY_PATH="/opt/PowerGrid/lib:${LD_LIBRARY_PATH}"
 export PATH="${PATH}:/opt/PowerGrid/bin"
 ```
 
+#### Additional Python support
+Images are saved as .npy files via cnpy, which is attached as a submodule

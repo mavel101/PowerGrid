@@ -56,6 +56,10 @@ acqTracking::acqTracking(ISMRMRD::Dataset *dataSet, ISMRMRD::IsmrmrdHeader &hdr)
 
 		// Scanning through the file.
 		d->readAcquisition(acqIndx, acq);
+		// skip noise and parallel imaging scans - mv
+		if (acq.isFlagSet(ISMRMRD::ISMRMRD_ACQ_IS_NOISE_MEASUREMENT) || acq.isFlagSet(ISMRMRD::ISMRMRD_ACQ_IS_PARALLEL_CALIBRATION))
+			continue;
+
 		ISMRMRD::EncodingCounters encIdx = acq.idx();
 
 		NShot = encIdx.kspace_encode_step_1;

@@ -11,6 +11,8 @@ option(OPENACC_GPU "Enable OpenACC support on NVIDIA GPU" ON)
 option(OPENACC_MP "Enable OpenACC support on CPU (PGI Only) " OFF)
 option(MPISupport "Enable MPI Support" ON)
 
+option(PythonSupport "Enable Python Support" ON)
+
 if(OPENACC_GPU AND OPENACC_MP)
 	message(FATAL_ERROR "You cannot build with both OPENACC_GPU AND OPENACC_MP at the same time")
 endif()
@@ -91,6 +93,10 @@ set(PG_FILES
 	${PROJECT_SOURCE_DIR}/PowerGrid/reconSupport/directRecon.cpp
 )
 
+# Disable automatic vector pipeling for Time Segmentation as it leads to errors in the "histo" option
+# See https://www.pgroup.com/resources/docs/19.10/x86/pgi-user-guide/index.htm#gs-perform-fast
+set_source_files_properties(${PROJECT_SOURCE_DIR}/PowerGrid/TimeSegmentation.cpp PROPERTIES COMPILE_FLAGS -Mnovect) 
+
 add_library(PowerGrid SHARED ${PG_FILES})
 target_link_libraries(PowerGrid ${LIBS})
 
@@ -131,11 +137,15 @@ if(OPENACC_GPU)
 	add_definitions(-DUSE_NVTX)
 endif()
 
+# Include cnpy
+add_subdirectory(cnpy)
+include_directories(${PROJECT_SOURCE_DIR}/cnpy)
+
 set(POWERGRID_ISMRMRD
 	./PowerGrid/PowerGridIsmrmrd.cpp
 )
 add_executable(PowerGridIsmrmrd ${POWERGRID_ISMRMRD})
-target_link_libraries(PowerGridIsmrmrd ${LIBS} PowerGrid)
+target_link_libraries(PowerGridIsmrmrd ${LIBS} PowerGrid cnpy)
 
 set(POWERGRID_PCSENSE
 	./PowerGrid/PowerGridPcSense.cpp
@@ -147,7 +157,7 @@ set(POWERGRID_PCSENSE_TIMESEG
 	./PowerGrid/PowerGridPcSenseTimeSeg.cpp
 )
 add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
-target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
+target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid cnpy)
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
@@ -157,6 +167,7 @@ if (MPISupport)
 endif (MPISupport)
 
 # Manage installing targets to sane locations in /opt
+install(TARGETS PowerGridPcSenseTimeSeg DESTINATION bin)
 install(TARGETS PowerGridPcSense DESTINATION bin)
 install(TARGETS PowerGridIsmrmrd DESTINATION bin)
 install(TARGETS PowerGrid DESTINATION lib)

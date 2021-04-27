@@ -33,8 +33,12 @@ Developed by:
 #include "processNIFTI.hpp"
 #include <boost/program_options.hpp>
 #include <chrono>
+#include "cnpy.h"
+
 namespace po = boost::program_options;
 //using namespace PowerGrid;
+
+typedef std::vector<std::complex<float>> cmplx_vec;
 
 int main(int argc, char **argv) {
   std::string rawDataFilePath, outputImageFilePath, senseMapFilePath,
@@ -44,11 +48,13 @@ int main(int argc, char **argv) {
   //uword ;
   double beta = 0.0;
   uword dims2penalize = 3;
+  bool ts_adapt, writeNifti;
   po::options_description desc("Allowed options");
   desc.add_options()("help,h", "produce help message")(
       "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
       "input ISMRMRD Raw Data file")
- 			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for NIFTIimages")
+ 			("outputImage,o", po::value<std::string>(&outputImageFilePath)->required(), "output file path for Numpy files and NIFTIimages")
+      ("writeNifti, w", po::bool_switch(&writeNifti)->default_value(false), "Write each image in own Nifti file if selected.")
 			("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
@@ -56,6 +62,7 @@ int main(int argc, char **argv) {
           ("TimeSegmentationInterp,I", po::value<std::string>(&TimeSegmentationInterp), "Field Correction Interpolator")
           ("FourierTransform,F", po::value<std::string>(&FourierTrans)->required(), "Implementation of Fourier Transform")
           ("TimeSegments,t", po::value<uword>(&L), "Number of time segments")
+          ("TSadapt,a", po::bool_switch(&ts_adapt)->default_value(false), "If selected, adjust number of time segments based on field map range.")
           ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
           ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
           ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
@@ -188,6 +195,8 @@ int main(int argc, char **argv) {
     	outputImageFilePath += '/';
 	}
 
+  cmplx_vec img_data;
+
   for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
   
     //acc_set_device_num(tid, acc_device_nvidia);
@@ -198,6 +207,10 @@ int main(int argc, char **argv) {
     Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
+
+    sword L_save=0;
+    double FM_range;
+    double FM_range_ref;
 
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
 		for (uword NEcho = 0; NEcho <= NEchoMax; NEcho++) {
@@ -232,6 +245,18 @@ int main(int argc, char **argv) {
 							            std::cout << "Info: Setting L = " << L << " by default." << std::endl; 
 						            }
 
+                      // Adapt number of time segments based on the range of the field map
+                      if (ts_adapt){
+                        L_save = L;
+                        if (NSlice==0){
+                          FM_range_ref = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
+                        }
+                        else{
+                          FM_range = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
+                          L = (int) (L*sqrt(FM_range/FM_range_ref));
+                          std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
+                        }
+                      }
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
 	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
@@ -265,14 +290,24 @@ int main(int argc, char **argv) {
 
 
 	                  //writeISMRMRDImageData<float>(d, ImageTemp, Nx, Ny, Nz);
-                    writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
-                    }
+                    if (writeNifti)
+                      writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+
+		                // save data for Python conversion
+                   for(int ii = 0; ii < Nx * Ny * Nz; ii++)
+                      img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));  
+
+                    // set L back to original value
+                    if (ts_adapt)
+                      L = L_save;
+                  }
 
                 }
             }
         }
     }
 
+  cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data[0],{NSliceMax+1,NPhaseMax+1,NEchoMax+1,NAvgMax+1,NRepMax+1,Nz,Ny,Nx},"w");
 
   // Close ISMRMRD::Dataset, hdr, and acqTrack
 	closeISMRMRDData(d,hdr,acqTrack);
