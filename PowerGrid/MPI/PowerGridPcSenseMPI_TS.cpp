@@ -41,7 +41,6 @@ namespace bmpi = boost::mpi;
 //using namespace PowerGrid;
 
 typedef std::vector<std::complex<float>> cmplx_vec;
-typedef std::vector<std::vector<std::complex<float>>> cmplx_vec2d;
 
 int main(int argc, char** argv)
 {
@@ -256,10 +255,9 @@ int main(int argc, char** argv)
     uword NSet = 0, NSeg = 0;
 
     // Image vector for conversion to Numpy Array
-    int vec_rows = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
-    cmplx_vec2d img_data_tmp(vec_rows);
     cmplx_vec img_data;
     int idx;
+    std::string idx_str;
 
     for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
 
@@ -324,19 +322,41 @@ int main(int argc, char** argv)
         if (writeNifti)
             writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
 
-        // save data for Python conversion - 2D to be thread safe
+        // save data for Python conversion
         idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
         for(int ii = 0; ii < Nx * Ny * Nz; ii++)
-            img_data_tmp[idx].push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+            img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+        
+        // Write single numpy files
+        idx_str = std::to_string(idx);
+        cnpy::npy_save(outputImageFilePath + "images_pg_"+idx_str+".npy",&img_data[0],{Nz,Ny,Nx},"w");
+        img_data.clear();
     }
 
-    // to 1D vector
-    for(int i = 0; i < vec_rows; i++){
+    world.barrier();
+
+    // write single files into one numpy file
+    if (world.rank() == 0){
+        int Nimg = NSliceMax * NPhaseMax * NEchoMax * NAvgMax * NRepMax;
+        std::string filename;
+        cmplx_vec img_data_write;
+        for(int k = 0; k < Nimg; k++){
+        // open image
+        idx_str = std::to_string(k);
+        filename = outputImageFilePath + "images_pg_"+idx_str+".npy";
+        cnpy::NpyArray img = cnpy::npy_load(filename);
+        std::complex<float>* loaded_data = img.data<std::complex<float>>();
+
+        // Write data to vector
         for(int j = 0; j < Nx * Ny * Nz; j++)
-            img_data.push_back(img_data_tmp[i][j]);
-    }
+            img_data_write.push_back(loaded_data[j]);
 
-    cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data[0],{NSliceMax,NPhaseMax,NEchoMax,NAvgMax,NRepMax,Nz,Ny,Nx},"w");
+        // Remove single image
+        std::remove(filename.c_str());
+        }
+        // Write images to one numpy file
+        cnpy::npy_save(outputImageFilePath + "images_pg.npy",&img_data_write[0],{NSliceMax,NPhaseMax,NEchoMax,NAvgMax,NRepMax,Nz,Ny,Nx},"w");
+    }
 
     // Close ISMRMRD::Dataset, hdr, and acqTrack
     closeISMRMRDData(d, hdr, acqTrack);
