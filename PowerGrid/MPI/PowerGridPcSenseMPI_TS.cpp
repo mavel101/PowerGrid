@@ -313,7 +313,7 @@ int main(int argc, char** argv)
         QuadPenalty<float> R(Nx, Ny, Nz, beta);
 
         
-        pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, 1, SMap, FMap,
+        pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, type, SMap, FMap,
             0 - PMap);
 
         ImageTemp = reconSolve<float, pcSenseTimeSeg<float>, QuadPenalty<float> >(data, S_DWI, R, kx, ky, kz, Nx,
