@@ -149,7 +149,7 @@ set(POWERGRID_PCSENSE
 	./PowerGrid/PowerGridPcSense.cpp
 )
 add_executable(PowerGridPcSense ${POWERGRID_PCSENSE})
-target_link_libraries(PowerGridPcSense ${LIBS} PowerGrid)
+target_link_libraries(PowerGridPcSense ${LIBS} PowerGrid cnpy)
 
 set(POWERGRID_PCSENSE_TIMESEG
 	./PowerGrid/PowerGridPcSenseTimeSeg.cpp
