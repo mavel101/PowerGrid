@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   //uword ;
   double beta = 0.0;
   uword dims2penalize = 3;
-  bool ts_adapt, writeNifti;
+  bool writeNifti;
   po::options_description desc("Allowed options");
   desc.add_options()("help,h", "produce help message")(
       "inputData,i", po::value<std::string>(&rawDataFilePath)->required(),
@@ -60,7 +60,6 @@ int main(int argc, char **argv) {
           ("NShots,s", po::value<uword>(&NShots), "Number of shots per image")
           ("TimeSegmentationInterp,I", po::value<std::string>(&TimeSegmentationInterp), "Field Correction Interpolator")
           ("TimeSegments,t", po::value<uword>(&L), "Number of time segments")
-          ("TSadapt,a", po::bool_switch(&ts_adapt)->default_value(false), "If selected, adjust number of time segments based on field map range.")
           ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
           ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
           ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
@@ -110,9 +109,6 @@ int main(int argc, char **argv) {
 	arma::Col<float> PMap;
 
 	processISMRMRDInput<float>(rawDataFilePath, d, hdr, FM, sen, acqTrack);
-
-	//std::cout << "Number of elements in SENSE Map = " << sen.n_rows << std::endl;
-	//std::cout << "Number of elements in Field Map = " << FM.n_rows << std::endl;
 
 	uword numAcq = d->getNumberOfAcquisitions();
 
@@ -188,18 +184,12 @@ int main(int argc, char **argv) {
 	uword NSeg = 0;
   for (uword NSlice = 0; NSlice<=NSliceMax; NSlice++) {
   
-    //acc_set_device_num(tid, acc_device_nvidia);
-    //Col<float> FM;
+
     Col<float> fmSlice;
-    //Col<std::complex<float>> sen;
- 	Col<std::complex<float>> senSlice;
+ 	  Col<std::complex<float>> senSlice;
     Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
-
-    sword L_save=0;
-    double FM_range;
-    double FM_range_ref;
 
 	  for (uword NPhase = 0; NPhase <= NPhaseMax; NPhase++) {
 		  for (uword NEcho = 0; NEcho <= NEchoMax; NEcho++) {
@@ -236,19 +226,6 @@ int main(int argc, char **argv) {
 							std::cout << "Info: Setting L = " << L << " by default." << std::endl; 
 						}
 
-					  // Adapt number of time segments based on the range of the field map
-            if (ts_adapt){
-              L_save = L;
-              if (NSlice==0){
-                FM_range_ref = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
-              }
-              else{
-                FM_range = arma::max(arma::vectorise(fmSlice)) - arma::min(arma::vectorise(fmSlice));
-                L = (int) (L*sqrt(FM_range/FM_range_ref));
-                std::cout << "Adapting time segments to L = " << L << " based on Field Map range." << std::endl; 
-              }
-            }
-
             std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
 						std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
 						std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
@@ -263,7 +240,6 @@ int main(int argc, char **argv) {
 						ImageTemp = reconSolve<float, pcSenseTimeSeg<float>, QuadPenalty<float>>(data, S_DWI, R, kx, ky, kz,
 								Nx,	Ny, Nz, tvec, NIter);
 
-						//writeISMRMRDImageData<float>(d, ImageTemp, Nx, Ny, Nz);
             if (writeNifti)
               writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
 
@@ -271,9 +247,6 @@ int main(int argc, char **argv) {
             for(int ii = 0; ii < Nx * Ny * Nz; ii++)
               img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));  
 
-            // set L back to original value
-            if (ts_adapt)
-              L = L_save;
 					}
 
 				}

@@ -310,7 +310,7 @@ int main(int argc, char** argv)
         std::cout << "Number of rows in phase map = " << PMap.n_rows << std::endl;
         std::cout << "Number of rows in data = " << data.n_rows << std::endl;
         std::cout << "Number of columns in data = " << data.n_cols << std::endl;
-        QuadPenalty<float> R(Nx, Ny, Nz, beta);
+        QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
 
         
         pcSenseTimeSeg<float> S_DWI(kx, ky, kz, Nx, Ny, Nz, nc, tvec, L, type, SMap, FMap,
