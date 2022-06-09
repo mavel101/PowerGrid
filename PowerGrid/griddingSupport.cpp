@@ -237,9 +237,8 @@ void deapodization2d(T1* __restrict pDst, T1* __restrict pSrc, int imageX,
     }
     
 
-#pragma acc parallel loop collapse(2) independent present(pDst [0:2 * imageX * imageY]) present( \
+#pragma acc parallel loop collapse(2) independent present(pDst [0:2 * imageX * imageY], \
     pSrc [0:2 * imageX * imageY]) 
-    {
         for (X = 0; X < imageX; X++) {
             for (Y = 0; Y < imageY; Y++) {
 
@@ -275,10 +274,9 @@ void deapodization2d(T1* __restrict pDst, T1* __restrict pSrc, int imageX,
                 } else {
                     pDst[2 * common_index] = 0.0;
                     pDst[2 * common_index + 1] = 0.0;
-                }
+              }
             }
         }
-    }
 }
 
 // Deapodizes 3d data by FT of the Kasier-Bessel kernel
@@ -310,16 +308,15 @@ void deapodization3d(T1* __restrict pDst, T1* __restrict pSrc, int imageX,
     // int common_index;
     int destSize = imageX * imageY * imageZ;
 
-#pragma acc parallel loop independent present(pSrc [0:2 * imageX * imageY * imageZ]) \
-    present(pDst [0:2 * imageX * imageY * imageZ])
+#pragma acc parallel loop independent present(pSrc [0:2 * imageX * imageY * imageZ], \
+    pDst [0:2 * imageX * imageY * imageZ])
     for (int ii = 0; ii < 2 * destSize; ii++) {
         pDst[ii] = (T1)0.0;
     }
 
 #pragma acc parallel loop collapse(3)                          \
-    independent present(pSrc [0:2 * imageX * imageY * imageZ]) \
-        present(pDst [0:2 * imageX * imageY * imageZ]) 
-    {
+    independent present(pSrc [0:2 * imageX * imageY * imageZ], \
+    pDst [0:2 * imageX * imageY * imageZ]) 
         for (Z = 0; Z < imageZ; Z++) {
             for (X = 0; X < imageX; X++) {
                 for (Y = 0; Y < imageY; Y++) {
@@ -364,7 +361,6 @@ void deapodization3d(T1* __restrict pDst, T1* __restrict pSrc, int imageX,
                 }
             }
         }
-    }
 }
 
 // We oversample the FFT by zeropadding so now we need to crop

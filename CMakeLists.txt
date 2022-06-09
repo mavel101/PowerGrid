@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19) #CMake version 3.19 required to properly support FindCUDAToolkit
+cmake_minimum_required(VERSION 3.17) #CMake version 3.2 required to properly support CMAKE_CXX_STANDARD
 
 ## Flags and settings that change the compiler (i.e. from default to C++11 or C++14)
 ## need to be set BEFORE calling project command (which does introspection and sets
@@ -34,17 +34,16 @@ if(Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-# Manage GPU libraries and FFTW
+set(CUDAVER 11.5)
+set(PGI_YEAR $ENV{HPCSDK_RELEASE}})
 if(OPENACC_GPU)
-	#find_package(CUDAToolkit)
-
-	find_path(cuFFT_INCLUDE_DIR cufft.h HINTS $ENV{NVCOMPILERS}/$ENV{NVARCH}/$ENV{NVSDKVER}/math_libs/include)
+	find_path(cuFFT_INCLUDE_DIR cufft.h HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/include)
 	include_directories(${cuFFT_INCLUDE_DIR})
-	find_library(cuFFT_LIBRARIES cufft HINTS $ENV{NVCOMPILERS}/$ENV{NVARCH}/$ENV{NVSDKVER}/math_libs/lib64)
+	find_library(cuFFT_LIBRARIES cufft HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/lib64)
 	set(LIBS ${LIBS} ${cuFFT_LIBRARIES})
-	find_library(cudaRT_LIBRARIES cudart HINTS $ENV{NVCOMPILERS}/$ENV{NVARCH}/$ENV{NVSDKVER}/cuda/lib64 /usr/local/cuda/lib64)
+	find_library(cudaRT_LIBRARIES cudart HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
 	set(LIBS ${LIBS} ${cudaRT_LIBRARIES})
-	find_library(nvToolsExt_LIBRARIES nvToolsExt HINTS $ENV{NVCOMPILERS}/$ENV{NVARCH}/$ENV{NVSDKVER}/cuda/lib64 /usr/local/cuda/lib64)
+	find_library(nvToolsExt_LIBRARIES nvToolsExt HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
 	set(LIBS ${LIBS} ${nvToolsExt_LIBRARIES})
 	find_package(FFTW REQUIRED FLOAT_LIB DOUBLE_LIB)
 	set(LIBS ${LIBS} ${FFTW_DOUBLE_LIB} ${FFTW_FLOAT_LIB})
@@ -118,8 +117,7 @@ else()
 	add_definitions(-DBOOST_NO_ALIGNMENT)
 		if(OPENACC_GPU)
 			add_definitions(-DOPENACC_GPU)
-			#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mp -Mnollvm -Mcuda -Minfo=accel -fast -acc -ta=tesla:cc35,cc60,cc75,flushz -pgf90libs")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -acc -pgf90libs")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mcuda -Minfo=accel -fast -acc -ta=tesla:cc35,cc60,cc75,cc86,cuda${CUDAVER} -pgf90libs")
 		elseif(OPENACC_MP)
 			add_definitions(-DOPENACC_MP)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mnollvm -O1 -Minfo=accel -acc  -ta=multicore -pgf90libs")
