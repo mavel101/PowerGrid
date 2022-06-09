@@ -71,4 +71,46 @@ public:
 extern template class Gdft<float>;
 extern template class Gdft<double>;
 
+template <typename T1> // This is of type complex<double> or complex<float>, or
+// any other type like float or single
+class Gdft_2ndorder {
+  typedef complex<T1> CxT1;
+
+public:
+  // Default Class Constructor and Destructor
+  Gdft_2ndorder();
+  // Class Constructor
+  Gdft_2ndorder(uword a, uword b, const Col<T1> &k1, const Col<T1> &k2, const Col<T1> &k3,
+       const Col<T1> &k4, const Col<T1> &k5, const Col<T1> &k6, const Col<T1> &k7, const Col<T1> &k8,
+       const Col<T1> &i1, const Col<T1> &i2,
+       const Col<T1> &i3, const Col<T1> &f1, const Col<T1> &t1);
+
+  // Class variables go here. Change as necessary
+  uword n1 = 0;
+  uword n2 = 0;
+
+  Col<T1> kx; // k-space coordinates
+  Col<T1> ky;
+  Col<T1> kz;
+  Col<T1> k2nd_1; // 2nd order field coefficients
+  Col<T1> k2nd_2;
+  Col<T1> k2nd_3;
+  Col<T1> k2nd_4;
+  Col<T1> k2nd_5;
+  Col<T1> ix; // image space coordinates
+  Col<T1> iy;
+  Col<T1> iz;
+  Col<T1> FM;
+  Col<T1> t;
+
+  // Overloaded methods for forward and adjoint transform
+  // Forward transform operation
+  Col<CxT1> operator*(const Col<CxT1> &d) const;
+  // Adjoint transform operation
+  Col<CxT1> operator/(const Col<CxT1> &d) const;
+};
+
+extern template class Gdft_2ndorder<float>;
+extern template class Gdft_2ndorder<double>;
+
 #endif // PowerGrid_Gdft_h

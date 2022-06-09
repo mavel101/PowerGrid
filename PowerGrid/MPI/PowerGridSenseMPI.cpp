@@ -284,7 +284,7 @@ int main(int argc, char **argv) {
     Col<float> fmSlice;
     //Col<std::complex<float>> sen;
  	  Col<std::complex<float>> senSlice;
-    Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
+    Col<float> kx(nro), ky(nro), kz(nro), tvec(nro), k2nd_1(nro), k2nd_2(nro), k2nd_3(nro), k2nd_4(nro), k2nd_5(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
@@ -294,8 +294,8 @@ int main(int argc, char **argv) {
  
 	                      senSlice = getISMRMRDCompleteSENSEMap<std::complex<float>>(d, sen, NSlice, Nx*Ny*Nz);
 						            fmSlice = getISMRMRDCompleteFieldMap<float>(d, FM, NSlice, (uword) (Nx*Ny*Nz));
-	                      getCompleteISMRMRDAcqData<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
-			                    kz, tvec);
+	                      getCompleteISMRMRDAcqData2ndorder<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
+			                    kz, tvec, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5);
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
 	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
@@ -314,9 +314,9 @@ int main(int argc, char **argv) {
 			                    QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
 			                    Ny, Nz, tvec, NIter);
                       } else if (FtType == 2) {
-                        Gdft<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec);
-	                      SENSE<float, Gdft<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, Gdft<float>>,
+                        Gdft_2ndorder<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,k2nd_1,k2nd_2,k2nd_3,k2nd_4,k2nd_5,ix,iy,iz,fmSlice,tvec);
+	                      SENSE<float, Gdft_2ndorder<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+	                      ImageTemp = reconSolve<float, SENSE<float, Gdft_2ndorder<float>>,
 	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
                               Ny, Nz, tvec, NIter);
                       } else if (FtType == 3) {

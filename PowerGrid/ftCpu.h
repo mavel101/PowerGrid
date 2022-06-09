@@ -147,6 +147,73 @@ extern template void iftCpu<double>(double *, double *, const double *,
                                     const double *, const double *,
                                     const double *, const double *,
                                     const double *, const int, const int);
+
+// 2nd order versions
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Fourier Transformation (FT).]             */
+/*                 - 2nd order version                                       */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void ftCpu_2ndorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
+            const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, 
+            const int num_k, const int num_i);
+
+// Explicit Instantiations
+extern template void ftCpu_2ndorder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *,
+                                   const int, const int);
+extern template void ftCpu_2ndorder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *, 
+                                    const int, const int);
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Inverse Fourier Transformation (IFT).] */
+/*                   - 2nd order version                                     */
+/*  Description [] */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
+            const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
+            const int num_k, const int num_i);
+
+// Explicit Instantiations
+extern template void iftCpu_2ndorder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *,
+                                   const int, const int);
+extern template void iftCpu_2ndorder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *, 
+                                    const int, const int);
+
 /*---------------------------------------------------------------------------*/
 /*  Namespace declared - end                                                 */
 /*---------------------------------------------------------------------------*/

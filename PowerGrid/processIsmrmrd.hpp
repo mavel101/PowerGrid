@@ -470,4 +470,112 @@ void getCompleteISMRMRDAcqData(ISMRMRD::Dataset *d, acqTracking *acqTrack, uword
   return;
 }
 
+
+// Read also 2nd order field coefficients from field camera
+template<typename T1>
+void getCompleteISMRMRDAcqData2ndorder(ISMRMRD::Dataset *d, acqTracking *acqTrack, uword NSlice, uword NRep, uword NAve, uword NEcho, uword NPhase, Col<std::complex<T1>> &data,
+                               Col<T1> &kx, Col<T1> &ky, Col<T1> &kz, Col<T1> &tvec, Col<T1> &k2nd_1, Col<T1> &k2nd_2, Col<T1> &k2nd_3, Col<T1> &k2nd_4, Col<T1> &k2nd_5)
+{
+	RANGE()
+	//Initialization
+	Mat<std::complex<T1>> acqWork;
+  	Cube<std::complex<T1>> dataWork;
+	Mat<T1> kxWork, kyWork, kzWork, tvecWork, k2nd_1Work, k2nd_2Work, k2nd_3Work, k2nd_4Work, k2nd_5Work;
+	uword numAcqTotal = d->getNumberOfAcquisitions();
+	bool firstData = true;
+	ISMRMRD::Acquisition acq;
+	std::cout << "Num of acquisitions in dataset = " << numAcqTotal << std::endl;
+	int acqIndx = -1;
+	int numAcqs = 0;
+  	int nro = -1, nc = -1;
+  	for (uword NPar = 0; NPar < acqTrack->NParMax; NPar++) {
+		for (uword NShot = 0; NShot < acqTrack->NShotMax; NShot++) {
+
+			acqIndx = acqTrack->acqArray(NShot, NPar, NSlice, NRep, NAve, NEcho, NPhase);
+      if (acqIndx != -1) {
+        numAcqs++;
+        if(firstData) {
+          d->readAcquisition(acqIndx, acq);
+          nro = acq.number_of_samples();
+          nc = acq.active_channels();
+
+          firstData = false;
+        }
+      }
+    }
+  }
+
+  // Preallocating storage for all of the data and trajectories.
+  dataWork.zeros(nro,nc,numAcqs);
+  kxWork.zeros(nro,numAcqs);
+  kyWork.zeros(nro,numAcqs);
+  kzWork.zeros(nro,numAcqs);
+  tvecWork.zeros(nro,numAcqs);
+  k2nd_1Work.zeros(nro,numAcqs);
+  k2nd_2Work.zeros(nro,numAcqs);
+  k2nd_3Work.zeros(nro,numAcqs);
+  k2nd_4Work.zeros(nro,numAcqs);
+  k2nd_5Work.zeros(nro,numAcqs);
+  acqWork.zeros(nro,nc);
+  uword curAcq = 0;
+	for (uword NPar = 0; NPar < acqTrack->NParMax; NPar++) {
+		for (uword NShot = 0; NShot < acqTrack->NShotMax; NShot++) {
+
+			acqIndx = acqTrack->acqArray(NShot, NPar, NSlice, NRep, NAve, NEcho, NPhase);
+			if (acqIndx != -1) {
+				d->readAcquisition(acqIndx, acq);
+				nro = acq.number_of_samples();
+				nc = acq.active_channels();
+
+				ISMRMRD::EncodingCounters encIdx = acq.idx();
+
+				std::cout << "Grabbing acq index #" << acqIndx << std::endl;
+
+				for (uword jj = 0; jj<nc; jj++) {
+					for (uword kk = 0; kk<nro; kk++) {
+						acqWork(kk, jj) = static_cast<std::complex<T1>>(acq.data(kk, jj));
+					}
+				}
+
+				//Deal with trajectories
+				for (uword ii = 0; ii<nro; ii++) {
+					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii));
+					kyWork(ii,curAcq)   = static_cast<T1>(acq.traj(1, ii));
+					kzWork(ii,curAcq)   = static_cast<T1>(acq.traj(2, ii));
+					tvecWork(ii,curAcq) = static_cast<T1>(acq.traj(3, ii));
+					k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii));
+					k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
+					k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
+					k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
+					k2nd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(8, ii));
+				}
+
+				dataWork.slice(curAcq) = acqWork;
+
+        curAcq++;
+
+
+			}
+		}
+	}
+
+  // Need to permute the dataWork.
+  dataWork = permute(dataWork,D3tuple(1,3,2));
+
+  //Vectorise coils from matrix to column vector
+  data = vectorise(dataWork);
+  kx   = vectorise(kxWork);
+  ky   = vectorise(kyWork);
+  kz   = vectorise(kzWork);
+  tvec = vectorise(tvecWork);
+  k2nd_1 = vectorise(k2nd_1Work);
+  k2nd_2 = vectorise(k2nd_2Work);
+  k2nd_3 = vectorise(k2nd_3Work);
+  k2nd_4 = vectorise(k2nd_4Work);
+  k2nd_5 = vectorise(k2nd_5Work);
+
+  return;
+}
+
+
 #endif //POWERGRID_PROCESSISMRMRD_HPP
