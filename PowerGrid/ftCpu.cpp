@@ -258,8 +258,8 @@ void ftCpu_2ndorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata
 #pragma acc loop vector(128)
       for (j = 0; j < num_i; j++) { // j is the pixel point in image-space
         expr = (kxtpi * ix[j] + kytpi * iy[j] + kztpi * iz[j] + (FM[j] * myti) + 
-        k2nd_1[j] * ix[j] * iy[j] + k2nd_2[j] * iz[j] * iy[j] + k2nd_3[j] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] * iy[j] + iz[j] * iz[j])) 
-        + k2nd_4[j] * ix[j] * iz[j] + k2nd_5[j] * (ix[j] * ix[j] - iy[j] * iy[j]));
+        k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] * iy[j] + iz[j] * iz[j])) 
+        + k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
         
         sinexpr = sinf(expr);
         cosexpr = cosf(expr);
@@ -333,8 +333,8 @@ void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdat
 #pragma acc loop vector(128)
       for (i = 0; i < num_k; i++) { // i is the time points in k-space
         expr = (kx[i] * itraj_x_tpi + ky[i] * itraj_y_tpi + kz[i] * itraj_z_tpi + (myfmj * t[i]) + 
-        k2nd_1[j] * ix[j] * iy[j] + k2nd_2[j] * iz[j] * iy[j] + k2nd_3[j] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] *  iy[j] + iz[j] * iz[j])) 
-        + k2nd_4[j] * ix[j] * iz[j] + k2nd_5[j] * (ix[j] * ix[j] - iy[j] * iy[j]));
+        k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] *  iy[j] + iz[j] * iz[j])) 
+        + k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
 
         // cosexpr = COS(expr); sinexpr = SIN(expr);
 
