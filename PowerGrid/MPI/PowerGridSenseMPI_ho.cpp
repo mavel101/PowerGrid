@@ -42,13 +42,13 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 
 int main(int argc, char **argv) {
   std::string rawDataFilePath, outputImageFilePath, senseMapFilePath,
-      fieldMapFilePath, precisionString, TimeSegmentationInterp, FourierTrans,
+      fieldMapFilePath, precisionString,
       rawDataNavFilePath;
 
   bmpi::environment env(argc, argv, true);
   bmpi::communicator world;
 
-  uword Nx, Ny, Nz, NShots = 1, type = 1, L = 0, NIter = 10, FtType = 0;
+  uword Nx, Ny, Nz, NIter = 10;
   //uword ;
   double beta = 0.0;
   uword dims2penalize = 3;
@@ -62,10 +62,6 @@ int main(int argc, char **argv) {
       ("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
-          ("NShots,s", po::value<uword>(&NShots), "Number of shots per image")
-          ("TimeSegmentationInterp,I", po::value<std::string>(&TimeSegmentationInterp)->required(), "Field Correction Interpolator (Required)")
-          ("FourierTransform,F", po::value<std::string>(&FourierTrans)->required(), "Implementation of Fourier Transform")
-          ("TimeSegments,t", po::value<uword>(&L)->required(), "Number of time segments (Required)")
           ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
           ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
           ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
@@ -82,33 +78,6 @@ int main(int argc, char **argv) {
       std::cout << desc << std::endl;
       return 1;
     }
-
-
-    if (FourierTrans.compare("DFT") == 0) {
-        FtType = 2;
-    
-    } else if (FourierTrans.compare("NUFFT") == 0) {
-      
-      FtType = 1;
-      if (TimeSegmentationInterp.compare("hanning") == 0) {
-        type = 1;
-      } else if (TimeSegmentationInterp.compare("minmax") == 0) {
-        type = 2;
-      } else if (TimeSegmentationInterp.compare("histo") == 0) {
-        type = 3;
-      } else {
-        std::cout << "Did not recognize temporal interpolator selection. " << std::endl
-                  << "Acceptable values are hanning or minmax."            << std::endl;
-        return 1;
-      }
-    } else if (FourierTrans.compare("DFTGrads") == 0) {
-      FtType = 3;
-    } else {
-      std::cout << "Did not recognize Fourier transform selection. " << std::endl
-                << "Acceptable values are DFT or NUFFT."             << std::endl;
-      return 1;
-    }
-
 
   } catch (boost::program_options::error &e) {
     std::cerr << "Error: " << e.what() << std::endl;
@@ -145,8 +114,8 @@ int main(int argc, char **argv) {
 	} 
 
   Col<float> ix, iy, iz;
-  initImageSpaceCoords(ix, iy, iz, Nx, Ny, Nz);
-
+  Col<float> ImgCoord;
+  ImgCoord = getISMRMRDImgCoord<float>(d);
 
   // Check and abort if we have more than one encoding space (No Navigators for
   // now).
@@ -296,6 +265,7 @@ int main(int argc, char **argv) {
 						            fmSlice = getISMRMRDCompleteFieldMap<float>(d, FM, NSlice, (uword) (Nx*Ny*Nz));
 	                      getCompleteISMRMRDAcqData2ndorder<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
 			                    kz, tvec, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5);
+                        getISMRMRDCompleteImgCoord(ix, iy, iz, d, ImgCoord, NSlice, Nx*Ny*Nz);
 
 	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
 	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
@@ -305,27 +275,12 @@ int main(int argc, char **argv) {
 
 	                    QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
 
-                      if (FtType == 1) {
-	                      Gnufft<float> G(kx.n_rows, (float) 2.0, Nx, Ny, Nz, kx, ky, kz, ix,
-			                    iy, iz);
-	                      TimeSegmentation<float, Gnufft<float>> A(G, fmSlice, tvec, kx.n_rows, Nx*Ny*Nz, L, type, NShots);
-                        SENSE<float, TimeSegmentation<float, Gnufft<float>>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, TimeSegmentation<float, Gnufft<float>>>,
-			                    QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-			                    Ny, Nz, tvec, NIter);
-                      } else if (FtType == 2) {
-                        Gdft_2ndorder<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,k2nd_1,k2nd_2,k2nd_3,k2nd_4,k2nd_5,ix,iy,iz,fmSlice,tvec);
-	                      SENSE<float, Gdft_2ndorder<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, Gdft_2ndorder<float>>,
-	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-                              Ny, Nz, tvec, NIter);
-                      } else if (FtType == 3) {
-                        GdftR2<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,ix,iy,iz,fmSlice,tvec,Nx,Ny,Nz);
-	                      SENSE<float, GdftR2<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-	                      ImageTemp = reconSolve<float, SENSE<float, GdftR2<float>>,
-	                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-                              Ny, Nz, tvec, NIter);
-                      }
+                      Gdft_2ndorder<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,k2nd_1,k2nd_2,k2nd_3,k2nd_4,k2nd_5,ix,iy,iz,fmSlice,tvec);
+                      SENSE<float, Gdft_2ndorder<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+                      ImageTemp = reconSolve<float, SENSE<float, Gdft_2ndorder<float>>,
+                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
+                            Ny, Nz, tvec, NIter);
+
                     if (writeNifti)
                       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
 

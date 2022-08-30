@@ -145,6 +145,26 @@ arma::Col<complex<T1>> getISMRMRDTemporalBasis(ISMRMRD::Dataset *d) {
 }
 
 template<typename T1>
+arma::Col<T1> getISMRMRDImgCoord(ISMRMRD::Dataset *d) {
+	RANGE()
+	const std::string sImgCoord = "ImgCoord";
+	arma::Col<double> vImgCoord_temp;
+	arma::Col<T1> vImgCoord;
+	std::cout << "About to get number of NDArrays (ImgCoord)" << std::endl;
+	if (d->getNumberOfNDArrays(sImgCoord) > 1) {
+		//Throw error here
+		std::cout << "OH NO!!!! SEGV APPROACHING!" << std::endl;
+	}
+	std::cout << "Got number of NDArrays (ImgCoord)" << std::endl;
+	ISMRMRD::NDArray<double> tempArray;
+	d->readNDArray(sImgCoord, 0, tempArray);
+	vImgCoord_temp = convertFromNDArrayToArma(tempArray);
+	vImgCoord = conv_to<arma::Col<T1>>::from(vImgCoord_temp);
+	return vImgCoord;
+}
+
+
+template<typename T1>
 arma::Col<T1> getISMRMRDCompletePhaseMap(ISMRMRD::Dataset *d, uword NSlice, uword NSet, uword NRep, uword NAvg, uword NPhase, uword NEcho, uword NSeg, uword imageSize)
 {
 	RANGE()
@@ -263,6 +283,43 @@ arma::Col<T1> getISMRMRDCompleteFieldMap(ISMRMRD::Dataset *d, arma::Col<T1> &Fie
 	//FieldMapOut.save("FieldMap.dat", raw_ascii);
 
 	return FieldMapOut;
+}
+
+template<typename T1>
+void getISMRMRDCompleteImgCoord(Col<T1> &ix, Col<T1> &iy, Col<T1> &iz, ISMRMRD::Dataset *d, arma::Col<T1> &ImgCoord, uword Slice, uword imageSize)
+{
+	RANGE()
+	//arma::Col<T1> FieldMaps = getISMRMRDFieldMap<T1>(d);
+
+	std::string xml;
+	std::cout << "trying to read the header from the ISMRMD::Dataset object" << std::endl;
+	d->readHeader(xml);
+	std::cout << "read the header from the ISMRMD::Dataset object" << std::endl;
+	ISMRMRD::IsmrmrdHeader hdr;
+	ISMRMRD::deserialize(xml.c_str(), hdr);
+
+	uword NSlices = hdr.encoding[0].encodingLimits.slice->maximum + 1;
+
+	uword startIdx_x = Slice * imageSize;
+	uword startIdx_y = Slice * imageSize + NSlices * imageSize;
+	uword startIdx_z = Slice * imageSize + 2 * NSlices * imageSize;
+
+	std::cout << "Coord X slicing startIndex = " << startIdx_x << std::endl;
+	std::cout << "Coord Y slicing startIndex = " << startIdx_y << std::endl;
+	std::cout << "Coord Z slicing startIndex = " << startIdx_z << std::endl;
+
+	uword endIdx_x = imageSize*(Slice+1) - 1;
+	uword endIdx_y = imageSize*(Slice+1) - 1 + NSlices * imageSize;
+	uword endIdx_z = imageSize*(Slice+1) - 1 + 2 * NSlices * imageSize;
+
+	std::cout << "Coord X slicing endIndex = " << endIdx_x << std::endl;
+	std::cout << "Coord Y slicing endIndex = " << endIdx_y << std::endl;
+	std::cout << "Coord Z slicing endIndex = " << endIdx_z << std::endl;
+
+	ix = ImgCoord.subvec(startIdx_x, endIdx_x);
+	iy = ImgCoord.subvec(startIdx_y, endIdx_y);
+	iz = ImgCoord.subvec(startIdx_z, endIdx_z);
+
 }
 
 template<typename T1>
