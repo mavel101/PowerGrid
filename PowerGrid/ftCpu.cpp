@@ -229,14 +229,11 @@ void ftCpu_2ndorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata
           const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
           const int num_i) {
 
-  T1 sumr = 0, sumi = 0, expr = 0,
-      kxtpi = 0,
-     kytpi = 0, kztpi = 0;
+  T1 sumr = 0, sumi = 0, expr = 0, tpi = 0, kxtpi = 0, kytpi = 0, kztpi = 0;
 
-     float cosexpr = 0, sinexpr = 0;
-  //T1   kzdeltaz = 0, kziztpi = 0, kx_N = 0, ky_N = 0, t_tpi = 0;
+  float cosexpr = 0, sinexpr = 0;
   int i = 0, j = 0;
-  //tpi = 2 * MRI_PI;
+  tpi = 2 * MRI_PI;
 
 // NON-conjugate transpose of G
 #pragma acc kernels copyin(kx[0:num_k], ky[0:num_k], kz[0:num_k], \
@@ -249,21 +246,16 @@ void ftCpu_2ndorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata
     for (i = 0; i < num_k; i++) { // i is the time point in k-space
       sumr = 0.0;
       sumi = 0.0;
-
-      kxtpi = kx[i] * 2 * MRI_PI;
-      kytpi = ky[i] * 2 * MRI_PI;
-      kztpi = kz[i] * 2 * MRI_PI;
-
-      T1 myti = t[i];
 #pragma acc loop vector(128)
       for (j = 0; j < num_i; j++) { // j is the pixel point in image-space
-        expr = (kxtpi * ix[j] + kytpi * iy[j] + kztpi * iz[j] + (FM[j] * myti) + 
-        k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] * iy[j] + iz[j] * iz[j])) 
-        + k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
+        expr = FM[j] * t[i] + 
+               tpi * (kx[i] * ix[j] + ky[i] * iy[j] + kz[i] * iz[j] +  
+                      k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + 
+                      k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] * iy[j] + iz[j] * iz[j])) + 
+                      k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
         
         sinexpr = sinf(expr);
         cosexpr = cosf(expr);
-        //my_sincosf(expr, &sinexpr, &cosexpr);
 
         sumr += (cosexpr * idata_r[j]) + (sinexpr * idata_i[j]);
         sumi += (-sinexpr * idata_r[j]) + (cosexpr * idata_i[j]);
@@ -288,19 +280,13 @@ void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdat
             const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
             const int num_k, const int num_i) {
 
-  T1 sumr = 0, sumi = 0, expr = 0, tpi = 0, 
-     cosexpr = 0, sinexpr = 0, itraj_x_tpi = 0, itraj_y_tpi = 0,
-     itraj_z_tpi = 0;
-  //T1 kzdeltaz = 0, kziztpi = 0;
+  T1 sumr = 0, sumi = 0, expr = 0, tpi = 0, cosexpr = 0, sinexpr = 0, itraj_x_tpi = 0, itraj_y_tpi = 0, itraj_z_tpi = 0;
   int i = 0, j = 0;
 
   //--------------------------------------------------------------------
   //                         Initialization
   //--------------------------------------------------------------------
   tpi = MRI_PI * 2.0;
-
-// kzdeltaz = kz[0] * MRI_DELTAZ;
-// kziztpi = kz[0] * iz[0] * tpi;
 
 //--------------------------------------------------------------------
 //               Inverse Fourier Transform:     x=(G^H) * Gx
@@ -318,25 +304,13 @@ void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdat
     for (j = 0; j < num_i; j++) { // j is the pixel points in image-space
       sumr = 0.0;
       sumi = 0.0;
-
-      itraj_x_tpi = ix[j] * tpi;
-      itraj_y_tpi = iy[j] * tpi;
-      itraj_z_tpi = iz[j] * tpi;
-/*
-#if USE_OPENMP
-#pragma omp parallel for default(none) reduction(+ : sumr, sumi) private(      \
-    expr, cosexpr, sinexpr) shared(j, kx, ky, kz, t, kzdeltaz, itraj_x_tpi,    \
-                                   itraj_y_tpi, kziztpi, fm, kdata_r, kdata_i)
-#endif
-*/
-      T1 myfmj = FM[j];
 #pragma acc loop vector(128)
       for (i = 0; i < num_k; i++) { // i is the time points in k-space
-        expr = (kx[i] * itraj_x_tpi + ky[i] * itraj_y_tpi + kz[i] * itraj_z_tpi + (myfmj * t[i]) + 
-        k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] *  iy[j] + iz[j] * iz[j])) 
-        + k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
-
-        // cosexpr = COS(expr); sinexpr = SIN(expr);
+        expr = (FM[j] * t[i]) + 
+               tpi * (kx[i] * ix[j] + ky[i] * iy[j] + kz[i] * iz[j] +
+                      k2nd_1[i] * ix[j] * iy[j] + k2nd_2[i] * iz[j] * iy[j] + 
+                      k2nd_3[i] * (3 * iz[j] * iz[j] - (ix[j] * ix[j] + iy[j] *  iy[j] + iz[j] * iz[j])) + 
+                      k2nd_4[i] * ix[j] * iz[j] + k2nd_5[i] * (ix[j] * ix[j] - iy[j] * iy[j]));
 
         sinexpr = sinf(expr);
         cosexpr = cosf(expr);
@@ -349,7 +323,6 @@ void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdat
       idata_i[j] = sumi; // Imaginary part
     }
   }
-  // stopMriTimer(getMriTimer()->timer_iftCpu);
 }
 
 
