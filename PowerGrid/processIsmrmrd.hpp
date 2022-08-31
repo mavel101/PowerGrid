@@ -596,11 +596,11 @@ void getCompleteISMRMRDAcqData2ndorder(ISMRMRD::Dataset *d, acqTracking *acqTrac
 
 				//Deal with trajectories
 				for (uword ii = 0; ii<nro; ii++) {
-					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii));
+					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii)); // rad/m
 					kyWork(ii,curAcq)   = static_cast<T1>(acq.traj(1, ii));
 					kzWork(ii,curAcq)   = static_cast<T1>(acq.traj(2, ii));
 					tvecWork(ii,curAcq) = static_cast<T1>(acq.traj(3, ii));
-					k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii));
+					k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii)); // rad/m^2
 					k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
 					k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
 					k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
