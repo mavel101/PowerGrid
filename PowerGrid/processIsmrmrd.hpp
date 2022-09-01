@@ -288,8 +288,10 @@ arma::Col<T1> getISMRMRDCompleteFieldMap(ISMRMRD::Dataset *d, arma::Col<T1> &Fie
 template<typename T1>
 void getISMRMRDCompleteImgCoord(Col<T1> &ix, Col<T1> &iy, Col<T1> &iz, ISMRMRD::Dataset *d, arma::Col<T1> &ImgCoord, uword Slice, uword imageSize)
 {
+	// Reads image space coordinates from MRD Array for higher order reconstruction
+	// Coordinates should be in [m], corresponding 1st and higher order terms in [rad/m], [rad/m^2] ...
+
 	RANGE()
-	//arma::Col<T1> FieldMaps = getISMRMRDFieldMap<T1>(d);
 
 	std::string xml;
 	std::cout << "trying to read the header from the ISMRMD::Dataset object" << std::endl;

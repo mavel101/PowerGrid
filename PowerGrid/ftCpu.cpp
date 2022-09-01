@@ -289,9 +289,9 @@ void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdat
 #if 0 // USE_OPENMP // FIXME: We can choose either this or the inner loop.
 #pragma omp parallel for
 #endif
-#pragma acc kernels copyin(kx[0:num_k], ky[0:num_k], kz[0:num_k],ix[0:num_i], \
+#pragma acc kernels copyin(kx[0:num_k], ky[0:num_k], kz[0:num_k], \
   k2nd_1[0:num_k], k2nd_2[0:num_k], k2nd_3[0:num_k], k2nd_4[0:num_k], k2nd_5[0:num_k], \
-  iy[0:num_i], iz[0:num_i], FM[0:num_i], t[0:num_k], kdata_r[0:num_k], kdata_i[0:num_k]) \
+  ix[0:num_i], iy[0:num_i], iz[0:num_i], FM[0:num_i], t[0:num_k], kdata_r[0:num_k], kdata_i[0:num_k]) \
   copyout( idata_r[0:num_i], idata_i[0:num_i])
   {
 #pragma acc loop independent gang
