@@ -546,7 +546,7 @@ void getCompleteISMRMRDAcqData2ndorder(ISMRMRD::Dataset *d, acqTracking *acqTrac
 	std::cout << "Num of acquisitions in dataset = " << numAcqTotal << std::endl;
 	int acqIndx = -1;
 	int numAcqs = 0;
-  	int nro = -1, nc = -1;
+  	int nro = -1, nc = -1, ndim = -1;
   	for (uword NPar = 0; NPar < acqTrack->NParMax; NPar++) {
 		for (uword NShot = 0; NShot < acqTrack->NShotMax; NShot++) {
 
@@ -585,6 +585,7 @@ void getCompleteISMRMRDAcqData2ndorder(ISMRMRD::Dataset *d, acqTracking *acqTrac
 				d->readAcquisition(acqIndx, acq);
 				nro = acq.number_of_samples();
 				nc = acq.active_channels();
+				ndim = acq.trajectory_dimensions();
 
 				ISMRMRD::EncodingCounters encIdx = acq.idx();
 
@@ -598,15 +599,19 @@ void getCompleteISMRMRDAcqData2ndorder(ISMRMRD::Dataset *d, acqTracking *acqTrac
 
 				//Deal with trajectories
 				for (uword ii = 0; ii<nro; ii++) {
-					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii)); // rad/m
+					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii)); // 1st order -> rad/m
 					kyWork(ii,curAcq)   = static_cast<T1>(acq.traj(1, ii));
 					kzWork(ii,curAcq)   = static_cast<T1>(acq.traj(2, ii));
-					tvecWork(ii,curAcq) = static_cast<T1>(acq.traj(3, ii));
-					k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii)); // rad/m^2
-					k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
-					k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
-					k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
-					k2nd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(8, ii));
+					tvecWork(ii,curAcq) = static_cast<T1>(acq.traj(3, ii)); // s
+
+					if (ndim>4){
+						k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii)); // 2nd order -> rad/m^2
+						k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
+						k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
+						k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
+						k2nd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(8, ii));
+					}
+					// WIP: 3rd order + concomitant field terms
 				}
 
 				dataWork.slice(curAcq) = acqWork;
