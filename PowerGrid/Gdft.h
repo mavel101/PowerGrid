@@ -73,17 +73,18 @@ extern template class Gdft<double>;
 
 template <typename T1> // This is of type complex<double> or complex<float>, or
 // any other type like float or single
-class Gdft_2ndorder {
+class Gdft_ho {
   typedef complex<T1> CxT1;
 
 public:
   // Default Class Constructor and Destructor
-  Gdft_2ndorder();
+  Gdft_ho();
   // Class Constructor
-  Gdft_2ndorder(uword a, uword b, const Col<T1> &k1, const Col<T1> &k2, const Col<T1> &k3,
-       const Col<T1> &k4, const Col<T1> &k5, const Col<T1> &k6, const Col<T1> &k7, const Col<T1> &k8,
-       const Col<T1> &i1, const Col<T1> &i2,
-       const Col<T1> &i3, const Col<T1> &f1, const Col<T1> &t1);
+  Gdft_ho(uword a, uword b, const Col<T1> &k1, const Col<T1> &k2, const Col<T1> &k3, const Col<T1> &k4, 
+          const Col<T1> &k5, const Col<T1> &k6, const Col<T1> &k7, const Col<T1> &k8, const Col<T1> &k9, 
+          const Col<T1> &k10, const Col<T1> &k11, const Col<T1> &k12, const Col<T1> &k13, const Col<T1> &k14, 
+          const Col<T1> &k15, const Col<T1> &k16, const Col<T1> &k17, const Col<T1> &k18, const Col<T1> &k19,
+          const Col<T1> &i1, const Col<T1> &i2, const Col<T1> &i3, const Col<T1> &f1, const Col<T1> &t1, int order);
 
   // Class variables go here. Change as necessary
   uword n1 = 0;
@@ -97,11 +98,24 @@ public:
   Col<T1> k2nd_3;
   Col<T1> k2nd_4;
   Col<T1> k2nd_5;
+  Col<T1> k3rd_1; // 3rd order
+  Col<T1> k3rd_2;
+  Col<T1> k3rd_3;
+  Col<T1> k3rd_4;
+  Col<T1> k3rd_5;
+  Col<T1> k3rd_6;
+  Col<T1> k3rd_7;
+  Col<T1> kcoco_1; // concomitant fields
+  Col<T1> kcoco_2;
+  Col<T1> kcoco_3;
+  Col<T1> kcoco_4;
   Col<T1> ix; // image space coordinates
   Col<T1> iy;
   Col<T1> iz;
   Col<T1> FM;
   Col<T1> t;
+
+  int reco_order;
 
   // Overloaded methods for forward and adjoint transform
   // Forward transform operation
@@ -110,7 +124,7 @@ public:
   Col<CxT1> operator/(const Col<CxT1> &d) const;
 };
 
-extern template class Gdft_2ndorder<float>;
-extern template class Gdft_2ndorder<double>;
+extern template class Gdft_ho<float>;
+extern template class Gdft_ho<double>;
 
 #endif // PowerGrid_Gdft_h

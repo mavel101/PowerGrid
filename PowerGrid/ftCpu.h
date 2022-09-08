@@ -148,7 +148,71 @@ extern template void iftCpu<double>(double *, double *, const double *,
                                     const double *, const double *,
                                     const double *, const int, const int);
 
-// 2nd order versions
+// Higher order versions
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Fourier Transformation (FT).]             */
+/*                 - concomitant field version                               */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void ftCpu_coco(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
+          const T1 *kx, const T1 *ky, const T1 *kz, const T1 *kcoco_1, 
+          const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4, 
+          const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
+          const int num_i);
+
+// Explicit Instantiations
+extern template void ftCpu_coco<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const int, const int);
+extern template void ftCpu_coco<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, 
+                                    const int, const int);
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Inverse Fourier Transformation (IFT).] */
+/*                   - concomitant field version                             */
+/*  Description [] */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void iftCpu_coco(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz, const T1 *kcoco_1, 
+            const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
+            const int num_k, const int num_i);
+
+// Explicit Instantiations
+extern template void iftCpu_coco<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const int, const int);
+extern template void iftCpu_coco<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, 
+                                    const int, const int);
+
+
 
 /*===========================================================================*/
 /*                                                                           */
@@ -159,10 +223,11 @@ extern template void iftCpu<double>(double *, double *, const double *,
 /*===========================================================================*/
 template <typename T1>
 void ftCpu_2ndorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
-            const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
-            const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
-            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, 
-            const int num_k, const int num_i);
+          const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
+          const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+          const T1 *kcoco_1, const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4, 
+          const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
+          const int num_i);
 
 // Explicit Instantiations
 extern template void ftCpu_2ndorder<float>(float *, float *, const float *,
@@ -170,9 +235,12 @@ extern template void ftCpu_2ndorder<float>(float *, float *, const float *,
                                    const float *, const float *, const float *,
                                    const float *, const float *, const float *,
                                    const float *, const float *, const float *,
-                                   const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
                                    const int, const int);
 extern template void ftCpu_2ndorder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
                                     const double *, const double *,
                                     const double *, const double *,
                                     const double *, const double *,
@@ -193,6 +261,7 @@ template <typename T1>
 void iftCpu_2ndorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
             const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
             const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+            const T1 *kcoco_1, const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4, 
             const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
             const int num_k, const int num_i);
 
@@ -202,7 +271,8 @@ extern template void iftCpu_2ndorder<float>(float *, float *, const float *,
                                    const float *, const float *, const float *,
                                    const float *, const float *, const float *,
                                    const float *, const float *, const float *,
-                                   const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
                                    const int, const int);
 extern template void iftCpu_2ndorder<double>(double *, double *, const double *,
                                     const double *, const double *,
@@ -211,7 +281,95 @@ extern template void iftCpu_2ndorder<double>(double *, double *, const double *,
                                     const double *, const double *,
                                     const double *, const double *,
                                     const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const int, const int);
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Fourier Transformation (FT).]             */
+/*                 - 2nd order version                                       */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void ftCpu_3rdorder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
+          const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
+          const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+          const T1 *k3rd_1, const T1 *k3rd_2, const T1 *k3rd_3, const T1 *k3rd_4,
+          const T1 *k3rd_5, const T1 *k3rd_6, const T1 *k3rd_7,
+          const T1 *kcoco_1, const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4,
+          const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
+          const int num_i);
+
+// Explicit Instantiations
+extern template void ftCpu_3rdorder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *, const float *,
+                                   const int, const int);
+extern template void ftCpu_3rdorder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *, const double *,
+                                    const int, const int);
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Inverse Fourier Transformation (IFT).] */
+/*                   - 2nd order version                                     */
+/*  Description [] */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void iftCpu_3rdorder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz, const T1 *k2nd_1, 
+            const T1 *k2nd_2, const T1 *k2nd_3, const T1 *k2nd_4, const T1 *k2nd_5,
+            const T1 *k3rd_1, const T1 *k3rd_2, const T1 *k3rd_3, const T1 *k3rd_4,
+            const T1 *k3rd_5, const T1 *k3rd_6, const T1 *k3rd_7,
+            const T1 *kcoco_1, const T1 *kcoco_2, const T1 *kcoco_3, const T1 *kcoco_4,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
+            const int num_k, const int num_i);
+
+// Explicit Instantiations
+extern template void iftCpu_3rdorder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *, const float *,
+                                   const int, const int);
+extern template void iftCpu_3rdorder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
                                     const double *, const double *, 
+                                    const double *, const double *, 
+                                    const double *, const double *, 
+                                    const double *, const double *, 
+                                    const double *, const double *, 
+                                    const double *, const double *, const double *,
                                     const int, const int);
 
 /*---------------------------------------------------------------------------*/

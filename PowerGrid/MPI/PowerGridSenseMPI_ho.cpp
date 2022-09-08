@@ -231,9 +231,10 @@ int main(int argc, char **argv) {
   cmplx_vec img_data;
   int idx;
   std::string idx_str;
+  int reco_order; // order of reconstruction
 
   for (uword ii = 0; ii < (*taskList)[world.rank()].size(); ii++) {
-    
+  
     taskIndex = (*taskList)[world.rank()].at(ii);
 
     NSlice = sliceList(taskIndex);
@@ -249,51 +250,56 @@ int main(int argc, char **argv) {
     std::cout << "NPhase = " << NPhase << std::endl;
     
 
-    //Col<float> FM;
+    // initialize arrays
     Col<float> fmSlice;
-    //Col<std::complex<float>> sen;
- 	  Col<std::complex<float>> senSlice;
-    Col<float> kx(nro), ky(nro), kz(nro), tvec(nro), k2nd_1(nro), k2nd_2(nro), k2nd_3(nro), k2nd_4(nro), k2nd_5(nro);
+    Col<std::complex<float>> senSlice;
+    Col<float> kx(nro), ky(nro), kz(nro), tvec(nro);
+    Col<float> k2nd_1(nro), k2nd_2(nro), k2nd_3(nro), k2nd_4(nro), k2nd_5(nro);
+    Col<float> k3rd_1(nro), k3rd_2(nro), k3rd_3(nro), k3rd_4(nro), k3rd_5(nro), k3rd_6(nro), k3rd_7(nro);
+    Col<float> kcoco_1(nro), kcoco_2(nro), kcoco_3(nro), kcoco_4(nro);
     Col<std::complex<float>> data(nro * nc);
     Col<std::complex<float>> ImageTemp(Nx * Ny * Nz);
 
-                      filename = outputImageFilePath + baseFilename + "_" + "Slice" + std::to_string(NSlice) +
-          								"_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
-          								"_" + "Echo" + std::to_string(NEcho) + "_" + "Phase" + std::to_string(NPhase);
- 
-	                      senSlice = getISMRMRDCompleteSENSEMap<std::complex<float>>(d, sen, NSlice, Nx*Ny*Nz);
-						            fmSlice = getISMRMRDCompleteFieldMap<float>(d, FM, NSlice, (uword) (Nx*Ny*Nz));
-	                      getCompleteISMRMRDAcqData2ndorder<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
-			                    kz, tvec, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5);
-                        getISMRMRDCompleteImgCoord(ix, iy, iz, d, ImgCoord, NSlice, Nx*Ny*Nz);
+    filename = outputImageFilePath + baseFilename + "_" + "Slice" + std::to_string(NSlice) +
+        "_" + "Rep" + std::to_string(NRep) + "_" + "Avg" + std::to_string(NAvg) +
+        "_" + "Echo" + std::to_string(NEcho) + "_" + "Phase" + std::to_string(NPhase);
 
-	                    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
-	                    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
-	                    std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
-	                    std::cout << "Number of rows in data = " << data.n_rows << std::endl;
-	                    std::cout << "Number of columns in data = " << data.n_cols << std::endl;
+    // get data
+    senSlice = getISMRMRDCompleteSENSEMap<std::complex<float>>(d, sen, NSlice, Nx*Ny*Nz);
+    fmSlice = getISMRMRDCompleteFieldMap<float>(d, FM, NSlice, (uword) (Nx*Ny*Nz));
+    reco_order = getCompleteISMRMRDAcqDataHigherOrder<float>(d, acqTrack, NSlice, NRep, NAvg, NEcho, NPhase, data, kx, ky,
+                                                            kz, tvec, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5, k3rd_1, k3rd_2, k3rd_3, 
+                                                            k3rd_4, k3rd_5, k3rd_6, k3rd_7, kcoco_1, kcoco_2, kcoco_3, kcoco_4);
+    getISMRMRDCompleteImgCoord(ix, iy, iz, d, ImgCoord, NSlice, Nx*Ny*Nz);
 
-	                    QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
+    std::cout << "Number of elements in kx = " << kx.n_rows << std::endl;
+    std::cout << "Number of elements in ky = " << ky.n_rows << std::endl;
+    std::cout << "Number of elements in kz = " << kz.n_rows << std::endl;
+    std::cout << "Number of rows in data = " << data.n_rows << std::endl;
+    std::cout << "Number of columns in data = " << data.n_cols << std::endl;
 
-                      Gdft_2ndorder<float> A(kx.n_rows, Nx*Ny*Nz,kx,ky,kz,k2nd_1,k2nd_2,k2nd_3,k2nd_4,k2nd_5,ix,iy,iz,fmSlice,tvec);
-                      SENSE<float, Gdft_2ndorder<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-                      ImageTemp = reconSolve<float, SENSE<float, Gdft_2ndorder<float>>,
-                            QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx,
-                            Ny, Nz, tvec, NIter);
+    // recon
+    QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
 
-                    if (writeNifti)
-                      writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+    Gdft_ho<float> A(kx.n_rows, Nx*Ny*Nz, kx, ky, kz, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5, 
+                    k3rd_1, k3rd_2, k3rd_3, k3rd_4, k3rd_5, k3rd_6, k3rd_7, kcoco_1, kcoco_2, kcoco_3, kcoco_4,
+                    ix, iy, iz, fmSlice, tvec, reco_order);
+    SENSE<float, Gdft_ho<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
+    ImageTemp = reconSolve<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter);
 
-                    // save data for Python conversion
-                    idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
-                    for(int ii = 0; ii < Nx * Ny * Nz; ii++)
-                        img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
-                    
-                    // Write single numpy files
-                    idx_str = std::to_string(idx);
-                    cnpy::npy_save(outputImageFilePath + "images_pg_"+idx_str+".npy",&img_data[0],{Nz,Ny,Nx},"w");
-                    img_data.clear();
-    }
+    if (writeNifti)
+      writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
+
+    // save data for Python conversion
+    idx = NSlice * NPhaseMax * NEchoMax * NAvgMax * NRepMax + NPhase * NEchoMax * NAvgMax * NRepMax + NEcho * NAvgMax * NRepMax + NAvg * NRepMax + NRep;
+    for(int ii = 0; ii < Nx * Ny * Nz; ii++)
+        img_data.push_back(static_cast<std::complex<float>>(ImageTemp(ii)));
+    
+    // Write single numpy files
+    idx_str = std::to_string(idx);
+    cnpy::npy_save(outputImageFilePath + "images_pg_"+idx_str+".npy",&img_data[0],{Nz,Ny,Nx},"w");
+    img_data.clear();
+  }
 
   world.barrier();
 
