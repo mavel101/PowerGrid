@@ -100,7 +100,7 @@ Col<complex<float> > reconSolve<float, SENSE<float, Gdft<float> >, QuadPenalty<f
                                                                                            Col<float>, uword, uword, uword, Col<float>,
                                                                                            uword);
 extern template
-Col<complex<float> > reconSolve<float, SENSE<float, Gdft_2ndorder<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_2ndorder<float>>&,
+Col<complex<float> > reconSolve<float, SENSE<float, Gdft_ho<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
                                                                                            Col<float>, uword, uword, uword, Col<float>,
                                                                                            uword);
@@ -127,7 +127,7 @@ Col<complex<double> > reconSolve<double, SENSE<double, Gdft<double> >, QuadPenal
 		uword);
 
 extern template
-Col<complex<double> > reconSolve<double, SENSE<double, Gdft_2ndorder<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_2ndorder<double>>&,
+Col<complex<double> > reconSolve<double, SENSE<double, Gdft_ho<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,
 		Col<double>, uword, uword, uword, Col<double>,
 		uword);

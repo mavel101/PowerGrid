@@ -541,7 +541,10 @@ int getCompleteISMRMRDAcqDataHigherOrder(ISMRMRD::Dataset *d, acqTracking *acqTr
 	//Initialization
 	Mat<std::complex<T1>> acqWork;
   	Cube<std::complex<T1>> dataWork;
-	Mat<T1> kxWork, kyWork, kzWork, tvecWork, k2nd_1Work, k2nd_2Work, k2nd_3Work, k2nd_4Work, k2nd_5Work;
+	Mat<T1> kxWork, kyWork, kzWork, tvecWork; 
+	Mat<T1> k2nd_1Work, k2nd_2Work, k2nd_3Work, k2nd_4Work, k2nd_5Work;
+	Mat<T1> k3rd_1Work, k3rd_2Work, k3rd_3Work, k3rd_4Work, k3rd_5Work, k3rd_6Work, k3rd_7Work;
+	Mat<T1> kcoco_1Work, kcoco_2Work, kcoco_3Work, kcoco_4Work;
 	uword numAcqTotal = d->getNumberOfAcquisitions();
 	bool firstData = true;
 	ISMRMRD::Acquisition acq;

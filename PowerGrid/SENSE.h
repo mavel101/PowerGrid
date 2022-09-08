@@ -82,8 +82,8 @@ extern template class SENSE<double, Gnufft<double>>;
 extern template class SENSE<double, TimeSegmentation<double, Gnufft<double>>>;
 extern template class SENSE<float, Gdft<float>>;
 extern template class SENSE<double, Gdft<double>>;
-extern template class SENSE<float, Gdft_2ndorder<float>>;
-extern template class SENSE<double, Gdft_2ndorder<double>>;
+extern template class SENSE<float, Gdft_ho<float>>;
+extern template class SENSE<double, Gdft_ho<double>>;
 extern template class SENSE<float, GdftR2<float>>;
 extern template class SENSE<double, GdftR2<double>>;
 #endif
