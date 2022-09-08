@@ -208,12 +208,14 @@ Col<complex<T1>> Gdft_ho<T1>::operator*(const Col<complex<T1>> &d) const {
   // realXformedDataPtr and imagXformedDataPtr and they are of type float*
 
   if (reco_order == 0){
+      std::cout << "1st order reconstruction." << std::endl;
     ftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
               kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
               iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
   }
   else if (reco_order == 1)
   {
+    std::cout << "1st order reconstruction with concomitant fields." << std::endl;
     ftCpu_coco<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
           kx.memptr(), ky.memptr(), kz.memptr(), kcoco_1.memptr(), kcoco_2.memptr(), 
           kcoco_3.memptr(), kcoco_4.memptr(), ix.memptr(), iy.memptr(), 
@@ -221,6 +223,7 @@ Col<complex<T1>> Gdft_ho<T1>::operator*(const Col<complex<T1>> &d) const {
   }
   else if (reco_order == 2)
   {
+    std::cout << "2nd order reconstruction with concomitant fields."<< std::endl;
     ftCpu_2ndorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
           kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
           k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(),  kcoco_1.memptr(), 
@@ -229,6 +232,7 @@ Col<complex<T1>> Gdft_ho<T1>::operator*(const Col<complex<T1>> &d) const {
   }
   else if (reco_order == 3)
   {
+    std::cout << "3rd order reconstruction with concomitant fields." << std::endl;
     ftCpu_3rdorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
           kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
           k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(), k3rd_1.memptr(), k3rd_2.memptr(),
