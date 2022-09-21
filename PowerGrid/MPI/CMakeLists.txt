@@ -31,6 +31,11 @@
     add_executable(PowerGridSenseMPI ${mpi_POWERGRID_Sense})
     find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
+    set(mpi_POWERGRID_Sense_ho
+    PowerGridSenseMPI_ho.cpp
+    )
+    add_executable(PowerGridSenseMPI_ho ${mpi_POWERGRID_Sense_ho})
+
     set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
     set(mpiLIBS ${LIBS})
     set(mpiLIBS ${mpiLIBS} ${MPI_CXX_LIBRARIES})
@@ -43,7 +48,9 @@
     target_link_libraries(PowerGridPcSenseMPI ${mpiLIBS} PowerGrid cnpy)
     target_link_libraries(PowerGridSenseMPI ${mpiLIBS} PowerGrid cnpy)
     target_link_libraries(PowerGridPcSenseMPI_TS ${mpiLIBS} PowerGrid cnpy)
+    target_link_libraries(PowerGridSenseMPI_ho ${mpiLIBS} PowerGrid cnpy)
     
     install(TARGETS PowerGridPcSenseMPI DESTINATION bin)
     install(TARGETS PowerGridSenseMPI DESTINATION bin)
     install(TARGETS PowerGridPcSenseMPI_TS DESTINATION bin)
+    install(TARGETS PowerGridSenseMPI_ho DESTINATION bin)

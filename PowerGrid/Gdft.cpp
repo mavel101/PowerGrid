@@ -137,3 +137,193 @@ Col<complex<T1>> Gdft<T1>::operator/(const Col<complex<T1>> &d) const {
 // Explicit Instantiations
 template class Gdft<float>;
 template class Gdft<double>;
+
+
+template <typename T1>
+Gdft_ho<T1>::Gdft_ho(
+    uword a, uword b, const Col<T1> &k1, const Col<T1> &k2, const Col<T1> &k3, const Col<T1> &k4, 
+    const Col<T1> &k5, const Col<T1> &k6, const Col<T1> &k7, const Col<T1> &k8, const Col<T1> &k9,
+    const Col<T1> &k10, const Col<T1> &k11, const Col<T1> &k12, const Col<T1> &k13, const Col<T1> &k14,
+    const Col<T1> &k15, const Col<T1> &k16, const Col<T1> &k17, const Col<T1> &k18, const Col<T1> &k19,
+    const Col<T1> &i1, const Col<T1> &i2, const Col<T1> &i3, const Col<T1> &f1, const Col<T1> &t1, int order) 
+    // Change these arguments as you need to setup the object
+{
+  
+  n1 = a;
+  n2 = b;
+  kx = k1;
+  ky = k2;
+  kz = k3;
+  k2nd_1 = k4;
+  k2nd_2 = k5;
+  k2nd_3 = k6;
+  k2nd_4 = k7;
+  k2nd_5 = k8;
+  k3rd_1 = k9;
+  k3rd_2 = k10;
+  k3rd_3 = k11;
+  k3rd_4 = k12;
+  k3rd_5 = k13;
+  k3rd_6 = k14;
+  k3rd_7 = k15;
+  kcoco_1 = k16;
+  kcoco_2 = k17;
+  kcoco_3 = k18;
+  kcoco_4 = k19;
+  ix = i1;
+  iy = i2;
+  iz = i3;
+  FM = f1;
+  t = t1;
+
+  reco_order = order;
+}
+// Overloaded methods for forward and adjoint transform
+// Forward transform operation
+template <typename T1>
+Col<complex<T1>> Gdft_ho<T1>::operator*(const Col<complex<T1>> &d) const {
+  RANGE()
+  // This is just specifying size assuming things are the same size, change as
+  // necessary
+  Col<T1> realData = real(d);
+  Col<T1> imagData = imag(d);
+  // Now we grab the data out of armadillo with the memptr() function
+  // This returns a pointer of the type of the elements of the
+  // array/vector/matrix/cube (3d matrix)
+  // Armadillo uses column major like MATLAB and Fortran, but different from
+  // 2D C++ arrays which are row major.
+  T1 *realDataPtr = realData.memptr();
+  T1 *imagDataPtr = imagData.memptr();
+
+  Col<T1> realXformedData;
+  Col<T1> imagXformedData;
+  realXformedData.zeros(this->n1);
+  imagXformedData.zeros(this->n1);
+
+  T1 *realXformedDataPtr = realXformedData.memptr();
+  T1 *imagXformedDataPtr = imagXformedData.memptr();
+  // Process data here, like calling a brute force transform, dft...
+  // I assume you create the pointers to the arrays where the transformed data
+  // will be stored
+  // realXformedDataPtr and imagXformedDataPtr and they are of type float*
+
+  if (reco_order == 0){
+    ftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+              kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
+              iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 1)
+  {
+    ftCpu_coco<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+          kx.memptr(), ky.memptr(), kz.memptr(), kcoco_1.memptr(), kcoco_2.memptr(), 
+          kcoco_3.memptr(), kcoco_4.memptr(), ix.memptr(), iy.memptr(), 
+          iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 2)
+  {
+    ftCpu_2ndorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+          kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
+          k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(),  kcoco_1.memptr(), 
+          kcoco_2.memptr(), kcoco_3.memptr(), kcoco_4.memptr(),
+          ix.memptr(), iy.memptr(), iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 3)
+  {
+    ftCpu_3rdorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+          kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
+          k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(), k3rd_1.memptr(), k3rd_2.memptr(),
+          k3rd_3.memptr(), k3rd_4.memptr(), k3rd_5.memptr(), k3rd_6.memptr(), k3rd_7.memptr(),
+          kcoco_1.memptr(), kcoco_2.memptr(), kcoco_3.memptr(), kcoco_4.memptr(),
+          ix.memptr(), iy.memptr(), iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else
+  {
+    ftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+              kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
+              iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  
+  // We can free the realDataXformPtr and imagDataXformPtr at this point and
+  // Armadillo will manage armadillo object memory as things change size or go
+  // out of scope and need to be destroyed
+
+  Col<complex<T1>> XformedData(this->n1);
+  XformedData.set_real(realXformedData);
+  XformedData.set_imag(imagXformedData);
+
+  return XformedData.eval(); // Return a vector of type T1
+}
+
+// Adjoint transform operation
+template <typename T1>
+Col<complex<T1>> Gdft_ho<T1>::operator/(const Col<complex<T1>> &d) const {
+  RANGE()
+  Col<T1> realData = real(d);
+  Col<T1> imagData = imag(d);
+
+  T1 *realDataPtr = realData.memptr();
+  T1 *imagDataPtr = imagData.memptr();
+
+  Col<T1> realXformedData;
+  Col<T1> imagXformedData;
+  realXformedData.zeros(this->n2);
+  imagXformedData.zeros(this->n2);
+
+  T1 *realXformedDataPtr = realXformedData.memptr();
+  T1 *imagXformedDataPtr = imagXformedData.memptr();
+  // Process data here, like calling a brute force transform, dft...
+  // I assume you create the pointers to the arrays where the transformed data
+  // will be stored
+  // realXformedDataPtr and imagXformedDataPtr and they are of type float*
+
+  if (reco_order == 0){
+    iftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+            kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
+            iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 1)
+  {
+    iftCpu_coco<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+             kx.memptr(), ky.memptr(), kz.memptr(), kcoco_1.memptr(), kcoco_2.memptr(), 
+             kcoco_3.memptr(), kcoco_4.memptr(), ix.memptr(), iy.memptr(),
+             iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 2)
+  {
+    iftCpu_2ndorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+             kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
+             k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(), kcoco_1.memptr(),
+             kcoco_2.memptr(), kcoco_3.memptr(), kcoco_4.memptr(),
+             ix.memptr(), iy.memptr(), iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else if (reco_order == 3)
+  {
+    iftCpu_3rdorder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+             kx.memptr(), ky.memptr(), kz.memptr(), k2nd_1.memptr(), k2nd_2.memptr(), 
+             k2nd_3.memptr(), k2nd_4.memptr(), k2nd_5.memptr(), k3rd_1.memptr(), k3rd_2.memptr(),
+             k3rd_3.memptr(), k3rd_4.memptr(), k3rd_5.memptr(), k3rd_6.memptr(), k3rd_7.memptr(), 
+             kcoco_1.memptr(), kcoco_2.memptr(), kcoco_3.memptr(), kcoco_4.memptr(),
+             ix.memptr(), iy.memptr(), iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+  else
+  {
+    std::cout << "Reconstruction order not recognized. Use first order reconstruction." << std::endl;
+    iftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+            kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
+            iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
+  }
+
+
+  // We can free the realDataXformPtr and imagDataXformPtr at this point and
+  // Armadillo will manage armadillo object memory as things change size or go
+  // out of scope and need to be destroyed
+
+  Col<complex<T1>> XformedData(this->n2);
+  XformedData.set_real(realXformedData);
+  XformedData.set_imag(imagXformedData);
+
+  return XformedData.eval(); // Return a vector of type T1
+}
+// Explicit Instantiations
+template class Gdft_ho<float>;
+template class Gdft_ho<double>;

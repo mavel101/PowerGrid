@@ -145,6 +145,26 @@ arma::Col<complex<T1>> getISMRMRDTemporalBasis(ISMRMRD::Dataset *d) {
 }
 
 template<typename T1>
+arma::Col<T1> getISMRMRDImgCoord(ISMRMRD::Dataset *d) {
+	RANGE()
+	const std::string sImgCoord = "ImgCoord";
+	arma::Col<double> vImgCoord_temp;
+	arma::Col<T1> vImgCoord;
+	std::cout << "About to get number of NDArrays (ImgCoord)" << std::endl;
+	if (d->getNumberOfNDArrays(sImgCoord) > 1) {
+		//Throw error here
+		std::cout << "OH NO!!!! SEGV APPROACHING!" << std::endl;
+	}
+	std::cout << "Got number of NDArrays (ImgCoord)" << std::endl;
+	ISMRMRD::NDArray<double> tempArray;
+	d->readNDArray(sImgCoord, 0, tempArray);
+	vImgCoord_temp = convertFromNDArrayToArma(tempArray);
+	vImgCoord = conv_to<arma::Col<T1>>::from(vImgCoord_temp);
+	return vImgCoord;
+}
+
+
+template<typename T1>
 arma::Col<T1> getISMRMRDCompletePhaseMap(ISMRMRD::Dataset *d, uword NSlice, uword NSet, uword NRep, uword NAvg, uword NPhase, uword NEcho, uword NSeg, uword imageSize)
 {
 	RANGE()
@@ -263,6 +283,45 @@ arma::Col<T1> getISMRMRDCompleteFieldMap(ISMRMRD::Dataset *d, arma::Col<T1> &Fie
 	//FieldMapOut.save("FieldMap.dat", raw_ascii);
 
 	return FieldMapOut;
+}
+
+template<typename T1>
+void getISMRMRDCompleteImgCoord(Col<T1> &ix, Col<T1> &iy, Col<T1> &iz, ISMRMRD::Dataset *d, arma::Col<T1> &ImgCoord, uword Slice, uword imageSize)
+{
+	// Reads image space coordinates from MRD Array for higher order reconstruction
+	// Coordinates should be in [m], corresponding 1st and higher order terms in [rad/m], [rad/m^2] ...
+
+	RANGE()
+
+	std::string xml;
+	std::cout << "trying to read the header from the ISMRMD::Dataset object" << std::endl;
+	d->readHeader(xml);
+	std::cout << "read the header from the ISMRMD::Dataset object" << std::endl;
+	ISMRMRD::IsmrmrdHeader hdr;
+	ISMRMRD::deserialize(xml.c_str(), hdr);
+
+	uword NSlices = hdr.encoding[0].encodingLimits.slice->maximum + 1;
+
+	uword startIdx_x = Slice * imageSize;
+	uword startIdx_y = Slice * imageSize + NSlices * imageSize;
+	uword startIdx_z = Slice * imageSize + 2 * NSlices * imageSize;
+
+	std::cout << "Coord X slicing startIndex = " << startIdx_x << std::endl;
+	std::cout << "Coord Y slicing startIndex = " << startIdx_y << std::endl;
+	std::cout << "Coord Z slicing startIndex = " << startIdx_z << std::endl;
+
+	uword endIdx_x = imageSize*(Slice+1) - 1;
+	uword endIdx_y = imageSize*(Slice+1) - 1 + NSlices * imageSize;
+	uword endIdx_z = imageSize*(Slice+1) - 1 + 2 * NSlices * imageSize;
+
+	std::cout << "Coord X slicing endIndex = " << endIdx_x << std::endl;
+	std::cout << "Coord Y slicing endIndex = " << endIdx_y << std::endl;
+	std::cout << "Coord Z slicing endIndex = " << endIdx_z << std::endl;
+
+	ix = ImgCoord.subvec(startIdx_x, endIdx_x);
+	iy = ImgCoord.subvec(startIdx_y, endIdx_y);
+	iz = ImgCoord.subvec(startIdx_z, endIdx_z);
+
 }
 
 template<typename T1>
@@ -469,5 +528,183 @@ void getCompleteISMRMRDAcqData(ISMRMRD::Dataset *d, acqTracking *acqTrack, uword
 
   return;
 }
+
+
+// Read also 2nd order field coefficients from field camera
+template<typename T1>
+int getCompleteISMRMRDAcqDataHigherOrder(ISMRMRD::Dataset *d, acqTracking *acqTrack, uword NSlice, uword NRep, uword NAve, uword NEcho, uword NPhase, Col<std::complex<T1>> &data,
+                               Col<T1> &kx, Col<T1> &ky, Col<T1> &kz, Col<T1> &tvec, Col<T1> &k2nd_1, Col<T1> &k2nd_2, Col<T1> &k2nd_3, Col<T1> &k2nd_4, Col<T1> &k2nd_5,
+							   Col<T1> &k3rd_1, Col<T1> &k3rd_2, Col<T1> &k3rd_3, Col<T1> &k3rd_4, Col<T1> &k3rd_5, Col<T1> &k3rd_6, Col<T1> &k3rd_7, 
+							   Col<T1> &kcoco_1, Col<T1> &kcoco_2, Col<T1> &kcoco_3, Col<T1> &kcoco_4)
+{
+	RANGE()
+	//Initialization
+	Mat<std::complex<T1>> acqWork;
+  	Cube<std::complex<T1>> dataWork;
+	Mat<T1> kxWork, kyWork, kzWork, tvecWork; 
+	Mat<T1> k2nd_1Work, k2nd_2Work, k2nd_3Work, k2nd_4Work, k2nd_5Work;
+	Mat<T1> k3rd_1Work, k3rd_2Work, k3rd_3Work, k3rd_4Work, k3rd_5Work, k3rd_6Work, k3rd_7Work;
+	Mat<T1> kcoco_1Work, kcoco_2Work, kcoco_3Work, kcoco_4Work;
+	uword numAcqTotal = d->getNumberOfAcquisitions();
+	bool firstData = true;
+	ISMRMRD::Acquisition acq;
+	std::cout << "Num of acquisitions in dataset = " << numAcqTotal << std::endl;
+	int acqIndx = -1;
+	int numAcqs = 0;
+  	int nro = -1, nc = -1, ndim = -1;
+  	for (uword NPar = 0; NPar < acqTrack->NParMax; NPar++) {
+		for (uword NShot = 0; NShot < acqTrack->NShotMax; NShot++) {
+			acqIndx = acqTrack->acqArray(NShot, NPar, NSlice, NRep, NAve, NEcho, NPhase);
+      		if (acqIndx != -1) {
+				numAcqs++;
+				if(firstData) {
+					d->readAcquisition(acqIndx, acq);
+					nro = acq.number_of_samples();
+					nc = acq.active_channels();
+
+					firstData = false;
+        		}
+      		}
+   		}
+  	}
+
+	// Preallocating storage for all of the data and trajectories.
+	dataWork.zeros(nro,nc,numAcqs);
+
+	// 1st order [rad/m] and time vector [s]
+	kxWork.zeros(nro,numAcqs); // x
+	kyWork.zeros(nro,numAcqs); // y
+	kzWork.zeros(nro,numAcqs); // z
+	tvecWork.zeros(nro,numAcqs); // t
+
+	// 2nd order [rad/m²]
+	k2nd_1Work.zeros(nro,numAcqs); // Xy
+	k2nd_2Work.zeros(nro,numAcqs); // Zy
+	k2nd_3Work.zeros(nro,numAcqs); // 3z² - (x² + y² + z²)
+	k2nd_4Work.zeros(nro,numAcqs); // Xz
+	k2nd_5Work.zeros(nro,numAcqs); // x² - y²
+
+	k3rd_1Work.zeros(nro,numAcqs); // 3yx² - y³
+	k3rd_2Work.zeros(nro,numAcqs); // xzy
+	k3rd_3Work.zeros(nro,numAcqs); // (5z² - (x² + y² + z²)) * y
+	k3rd_4Work.zeros(nro,numAcqs); // 5z³ - 3z(x² + y² + z²)
+	k3rd_5Work.zeros(nro,numAcqs); // (5z² - (x² + y² + z²)) * x
+	k3rd_6Work.zeros(nro,numAcqs); // x²z - y²z
+	k3rd_7Work.zeros(nro,numAcqs); // x³ - 3xy²
+
+	kcoco_1Work.zeros(nro,numAcqs); // z²
+	kcoco_2Work.zeros(nro,numAcqs); // x² + y²
+	kcoco_3Work.zeros(nro,numAcqs); // xz
+	kcoco_4Work.zeros(nro,numAcqs); // yz
+
+	acqWork.zeros(nro,nc);
+	uword curAcq = 0;
+	int order = 0;
+	for (uword NPar = 0; NPar < acqTrack->NParMax; NPar++) {
+		for (uword NShot = 0; NShot < acqTrack->NShotMax; NShot++) {
+
+			acqIndx = acqTrack->acqArray(NShot, NPar, NSlice, NRep, NAve, NEcho, NPhase);
+			if (acqIndx != -1) {
+				d->readAcquisition(acqIndx, acq);
+				nro = acq.number_of_samples();
+				nc = acq.active_channels();
+				ndim = acq.trajectory_dimensions();
+
+				ISMRMRD::EncodingCounters encIdx = acq.idx();
+
+				std::cout << "Grabbing acq index #" << acqIndx << std::endl;
+
+				for (uword jj = 0; jj<nc; jj++) {
+					for (uword kk = 0; kk<nro; kk++) {
+						acqWork(kk, jj) = static_cast<std::complex<T1>>(acq.data(kk, jj));
+					}
+				}
+
+				//Deal with trajectories
+				for (uword ii = 0; ii<nro; ii++) {
+					kxWork(ii,curAcq)   = static_cast<T1>(acq.traj(0, ii)); 
+					kyWork(ii,curAcq)   = static_cast<T1>(acq.traj(1, ii));
+					kzWork(ii,curAcq)   = static_cast<T1>(acq.traj(2, ii));
+					tvecWork(ii,curAcq) = static_cast<T1>(acq.traj(3, ii));
+
+					if (ndim == 8){ // only concomitant
+						order = 1;
+						kcoco_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii));
+						kcoco_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
+						kcoco_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
+						kcoco_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
+					}
+
+					if (ndim==13){ // coco and 2nd order
+						order = 2;
+						k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii));
+						k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
+						k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
+						k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
+						k2nd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(8, ii));
+
+						kcoco_1Work(ii,curAcq) = static_cast<T1>(acq.traj(9, ii));
+						kcoco_2Work(ii,curAcq) = static_cast<T1>(acq.traj(10, ii));
+						kcoco_3Work(ii,curAcq) = static_cast<T1>(acq.traj(11, ii));
+						kcoco_4Work(ii,curAcq) = static_cast<T1>(acq.traj(12, ii));
+						
+					}
+					if (ndim==20){ // coco, 2nd and 3rd order
+						order = 3;
+						k2nd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(4, ii));
+						k2nd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(5, ii));
+						k2nd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(6, ii));
+						k2nd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(7, ii));
+						k2nd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(8, ii));
+						
+						k3rd_1Work(ii,curAcq) = static_cast<T1>(acq.traj(9, ii));
+						k3rd_2Work(ii,curAcq) = static_cast<T1>(acq.traj(10, ii));
+						k3rd_3Work(ii,curAcq) = static_cast<T1>(acq.traj(11, ii));
+						k3rd_4Work(ii,curAcq) = static_cast<T1>(acq.traj(12, ii));
+						k3rd_5Work(ii,curAcq) = static_cast<T1>(acq.traj(13, ii));
+						k3rd_6Work(ii,curAcq) = static_cast<T1>(acq.traj(14, ii));
+						k3rd_7Work(ii,curAcq) = static_cast<T1>(acq.traj(15, ii));
+
+						kcoco_1Work(ii,curAcq) = static_cast<T1>(acq.traj(16, ii));
+						kcoco_2Work(ii,curAcq) = static_cast<T1>(acq.traj(17, ii));
+						kcoco_3Work(ii,curAcq) = static_cast<T1>(acq.traj(18, ii));
+						kcoco_4Work(ii,curAcq) = static_cast<T1>(acq.traj(19, ii));
+					}
+				}
+				dataWork.slice(curAcq) = acqWork;
+				curAcq++;
+			}
+		}
+	}
+
+	// Need to permute the dataWork.
+	dataWork = permute(dataWork,D3tuple(1,3,2));
+
+	//Vectorise coils from matrix to column vector
+	data = vectorise(dataWork);
+	kx   = vectorise(kxWork);
+	ky   = vectorise(kyWork);
+	kz   = vectorise(kzWork);
+	tvec = vectorise(tvecWork);
+	k2nd_1 = vectorise(k2nd_1Work);
+	k2nd_2 = vectorise(k2nd_2Work);
+	k2nd_3 = vectorise(k2nd_3Work);
+	k2nd_4 = vectorise(k2nd_4Work);
+	k2nd_5 = vectorise(k2nd_5Work);
+	k3rd_1 = vectorise(k3rd_1Work);
+	k3rd_2 = vectorise(k3rd_2Work);
+	k3rd_3 = vectorise(k3rd_3Work);
+	k3rd_4 = vectorise(k3rd_4Work);
+	k3rd_5 = vectorise(k3rd_5Work);
+	k3rd_6 = vectorise(k3rd_6Work);
+	k3rd_7 = vectorise(k3rd_7Work);
+	kcoco_1 = vectorise(kcoco_1Work);
+	kcoco_2 = vectorise(kcoco_2Work);
+	kcoco_3 = vectorise(kcoco_3Work);
+	kcoco_4 = vectorise(kcoco_4Work);
+
+  	return order;
+}
+
 
 #endif //POWERGRID_PROCESSISMRMRD_HPP

@@ -103,5 +103,7 @@ template class SENSE<double, Gnufft<double>>;
 template class SENSE<double, TimeSegmentation<double, Gnufft<double>>>;
 template class SENSE<float, Gdft<float>>;
 template class SENSE<double, Gdft<double>>;
+template class SENSE<float, Gdft_ho<float>>;
+template class SENSE<double, Gdft_ho<double>>;
 template class SENSE<float, GdftR2<float>>;
 template class SENSE<double, GdftR2<double>>;
