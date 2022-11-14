@@ -208,7 +208,7 @@ Col<complex<T1>> Gdft_ho<T1>::operator*(const Col<complex<T1>> &d) const {
   // realXformedDataPtr and imagXformedDataPtr and they are of type float*
 
   if (reco_order == 0){
-    ftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+    ftCpu_1storder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
               kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
               iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
   }
@@ -277,7 +277,7 @@ Col<complex<T1>> Gdft_ho<T1>::operator/(const Col<complex<T1>> &d) const {
   // realXformedDataPtr and imagXformedDataPtr and they are of type float*
 
   if (reco_order == 0){
-    iftCpu<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
+    iftCpu_1storder<T1>(realXformedDataPtr, imagXformedDataPtr, realDataPtr, imagDataPtr,
             kx.memptr(), ky.memptr(), kz.memptr(), ix.memptr(), iy.memptr(),
             iz.memptr(), FM.memptr(), t.memptr(), this->n1, this->n2);
   }
