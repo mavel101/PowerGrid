@@ -317,6 +317,100 @@ void iftCpu_coco(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
   }
 }
 
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Fourier Transformation (FT) ]             */
+/*               - 1st order version                                         */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void ftCpu_1storder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
+          const T1 *kx, const T1 *ky, const T1 *kz,
+          const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
+          const int num_i) {
+
+  T1 sumr = 0, sumi = 0, expr = 0, kxtpi = 0, kytpi = 0, kztpi = 0;
+
+  float cosexpr = 0, sinexpr = 0;
+  int i = 0, j = 0;
+
+// NON-conjugate transpose of G
+#pragma acc kernels copyin(kx[0:num_k], ky[0:num_k], kz[0:num_k], \
+  ix[0:num_i], iy[0:num_i], iz[0:num_i], FM[0:num_i], t[0:num_k], idata_r[0:num_i], idata_i[0:num_i]) \
+  copyout(kdata_r[0:num_k], kdata_i[0:num_k])
+  {
+
+#pragma acc loop independent gang
+    for (i = 0; i < num_k; i++) { // i is the time point in k-space
+      sumr = 0.0;
+      sumi = 0.0;
+#pragma acc loop vector(128)
+      for (j = 0; j < num_i; j++) { // j is the pixel point in image-space
+        expr = FM[j] * t[i] + 
+               kx[i] * ix[j] + ky[i] * iy[j] + kz[i] * iz[j];
+        
+        sinexpr = sinf(expr);
+        cosexpr = cosf(expr);
+
+        sumr += (cosexpr * idata_r[j]) + (sinexpr * idata_i[j]);
+        sumi += (-sinexpr * idata_r[j]) + (cosexpr * idata_i[j]);
+      }
+      kdata_r[i] = sumr; // Real part
+      kdata_i[i] = sumi; // Imaginary part
+    }
+  }
+}
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Inverse Fourier Transformation (IFT).]    */
+/*               - 1st order version                                         */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void iftCpu_1storder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
+            const int num_k, const int num_i) {
+
+  T1 sumr = 0, sumi = 0, expr = 0, cosexpr = 0, sinexpr = 0;
+  int i = 0, j = 0;
+
+//--------------------------------------------------------------------
+//               Inverse Fourier Transform:     x=(G^H) * Gx
+//--------------------------------------------------------------------
+// the conjugate transpose of G
+#if 0 // USE_OPENMP // FIXME: We can choose either this or the inner loop.
+#pragma omp parallel for
+#endif
+#pragma acc kernels copyin(kx[0:num_k], ky[0:num_k], kz[0:num_k], \
+  ix[0:num_i], iy[0:num_i], iz[0:num_i], FM[0:num_i], t[0:num_k], kdata_r[0:num_k], kdata_i[0:num_k]) \
+  copyout( idata_r[0:num_i], idata_i[0:num_i])
+  {
+#pragma acc loop independent gang
+    for (j = 0; j < num_i; j++) { // j is the pixel points in image-space
+      sumr = 0.0;
+      sumi = 0.0;
+#pragma acc loop vector(128)
+      for (i = 0; i < num_k; i++) { // i is the time points in k-space
+        expr = (FM[j] * t[i]) + 
+                kx[i] * ix[j] + ky[i] * iy[j] + kz[i] * iz[j];
+
+        sinexpr = sinf(expr);
+        cosexpr = cosf(expr);
+
+        sumr += (cosexpr * kdata_r[i]) - (sinexpr * kdata_i[i]);
+        sumi += (sinexpr * kdata_r[i]) + (cosexpr * kdata_i[i]);
+      }
+
+      idata_r[j] = sumr; // Real part
+      idata_i[j] = sumi; // Imaginary part
+    }
+  }
+}
+
 
 /*===========================================================================*/
 /*                                                                           */
@@ -607,6 +701,27 @@ template void iftCpu_coco<double>(double *, double *, const double *, const doub
                              const double *, const double *, const double *,
                              const double *, const double *, const double *,
                              const double *, const double *, const double *,
+                             const int, const int);
+
+template void ftCpu_1storder<float>(float *, float *, const float *, const float *,
+                           const float *, const float *, const float *,
+                           const float *, const float *, const float *,
+                           const float *, const float *,
+                           const int, const int);
+template void ftCpu_1storder<double>(double *, double *, const double *, const double *,
+                            const double *, const double *, const double *,
+                            const double *, const double *, const double *,
+                            const double *, const double *,
+                            const int, const int);
+template void iftCpu_1storder<float>(float *, float *, const float *, const float *,
+                            const float *, const float *, const float *,
+                            const float *, const float *, const float *,
+                            const float *, const float *,
+                            const int, const int);
+template void iftCpu_1storder<double>(double *, double *, const double *, const double *,
+                             const double *, const double *, const double *,
+                             const double *, const double *, const double *,
+                             const double *, const double *,
                              const int, const int);
 
 template void ftCpu_2ndorder<float>(float *, float *, const float *, const float *,

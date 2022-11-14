@@ -148,7 +148,7 @@ extern template void iftCpu<double>(double *, double *, const double *,
                                     const double *, const double *,
                                     const double *, const int, const int);
 
-// Higher order versions
+// Higher order versions / physical coordinate system
 
 /*===========================================================================*/
 /*                                                                           */
@@ -212,7 +212,59 @@ extern template void iftCpu_coco<double>(double *, double *, const double *,
                                     const double *, 
                                     const int, const int);
 
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Fourier Transformation (FT).]             */
+/*                 - 1st order version                                       */
+/*  Description []                                                           */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void ftCpu_1storder(T1 *kdata_r, T1 *kdata_i, const T1 *idata_r, const T1 *idata_i,
+          const T1 *kx, const T1 *ky, const T1 *kz, 
+          const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t, const int num_k,
+          const int num_i);
 
+// Explicit Instantiations
+extern template void ftCpu_1storder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *,
+                                   const float *, const int, const int);
+extern template void ftCpu_1storder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, 
+                                    const int, const int);
+
+/*===========================================================================*/
+/*                                                                           */
+/*  Synopsis    [CPU kernel of the Inverse Fourier Transformation (IFT).] */
+/*                   - 1st order version                                    */
+/*  Description [] */
+/*                                                                           */
+/*===========================================================================*/
+template <typename T1>
+void iftCpu_1storder(T1 *idata_r, T1 *idata_i, const T1 *kdata_r, const T1 *kdata_i,
+            const T1 *kx, const T1 *ky, const T1 *kz,
+            const T1 *ix, const T1 *iy, const T1 *iz, const T1 *FM, const T1 *t,
+            const int num_k, const int num_i);
+
+// Explicit Instantiations
+extern template void iftCpu_1storder<float>(float *, float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *, const float *,
+                                   const float *, const float *,
+                                   const float *, const int, const int);
+extern template void iftCpu_1storder<double>(double *, double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, const double *,
+                                    const double *, 
+                                    const int, const int);
 
 /*===========================================================================*/
 /*                                                                           */
