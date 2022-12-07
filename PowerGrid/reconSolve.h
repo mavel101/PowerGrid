@@ -81,6 +81,21 @@ Col<complex<T1>> reconSolve(Col<complex<T1>> data, TObj& Sg, RObj R,
   return imageOut;
 }
 
+template <typename T1, typename TObj, typename RObj>
+Col<complex<T1>> reconSolve_dcf(Col<complex<T1>> data, TObj& Sg, RObj R,
+                            Col<T1> kx, Col<T1> ky, Col<T1> kz, uword Nx,
+                            uword Ny, uword Nz, Col<T1> tvec, uword niter, Col<T1> W) {
+  typedef std::complex<T1> CxT1;
+
+  Col<std::complex<T1>> xinit;
+  xinit.zeros(Nx * Ny * Nz);
+
+  Col<CxT1> imageOut;
+  imageOut = solve_pwls_pcg<T1, TObj, RObj>(xinit, Sg, W, data, R, niter);
+
+  return imageOut;
+}
+
 // Explicit Instantiation
 extern template void initImageSpaceCoords<float>(Col<float> &, Col<float> &,
                                                  Col<float> &, uword Nx, uword Ny,
@@ -100,16 +115,15 @@ Col<complex<float> > reconSolve<float, SENSE<float, Gdft<float> >, QuadPenalty<f
                                                                                            Col<float>, uword, uword, uword, Col<float>,
                                                                                            uword);
 extern template
-Col<complex<float> > reconSolve<float, SENSE<float, Gdft_ho<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
+Col<complex<float> > reconSolve_dcf<float, SENSE<float, Gdft_ho<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
                                                                                            Col<float>, uword, uword, uword, Col<float>,
-                                                                                           uword);
+                                                                                           uword, Col<float>);
 extern template
 Col<complex<float> > reconSolve<float, SENSE<float, GdftR2<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, GdftR2<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
                                                                                            Col<float>, uword, uword, uword, Col<float>,
                                                                                            uword);
-
 extern template
 Col<complex<float>>
 reconSolve(Col<complex<float>>, pcSENSE<float>&, QuadPenalty<float>, Col<float>, Col<float>, Col<float>, uword,
@@ -127,10 +141,10 @@ Col<complex<double> > reconSolve<double, SENSE<double, Gdft<double> >, QuadPenal
 		uword);
 
 extern template
-Col<complex<double> > reconSolve<double, SENSE<double, Gdft_ho<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
+Col<complex<double> > reconSolve_dcf<double, SENSE<double, Gdft_ho<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,
 		Col<double>, uword, uword, uword, Col<double>,
-		uword);
+		uword, Col<double>);
 
 extern template
 Col<complex<double> > reconSolve<double, SENSE<double, GdftR2<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, GdftR2<double>>&,
@@ -143,39 +157,5 @@ Col<complex<double>>
 reconSolve(Col<complex<double>>, pcSENSE<double>&, QuadPenalty<double>, Col<double>, Col<double>, Col<double>, uword,
 		uword, uword, Col<double>, uword);
 
-/*
-extern template
-Col<complex<double> >
-reconSolve<double, SENSE<double, Gnufft<double> > &,
-           QuadPenalty<double> &>(Col<complex<double> >, SENSE<double, Gnufft<double> > &,
-                                  QuadPenalty<double> &, Col<double>, Col<double>, Col<double>, uword,
-                                  uword, uword, Col<double>, uword);
-extern template
-Col<complex<double> >
-reconSolve<double, SENSE<double, Gdft<double> > &, QuadPenalty<double> &>(Col<complex<double> >, SENSE<double, Gdft<double> > &,
-                                                                          QuadPenalty<double> &, Col<double>, Col<double>, Col<double>, uword,
-                                                                          uword, uword, Col<double>, uword);
-extern template
-Col<complex<float> >
-reconSolve<float, SENSE<float, Gnufft<float> > &, TVPenalty<float> &>(Col<complex<float> >, SENSE<float, Gnufft<float> > &,
-                                                                      TVPenalty<float> &, Col<float>, Col<float>, Col<float>, uword, uword,
-                                                                      uword, Col<float>, uword);
-extern template
-Col<complex<float> > reconSolve<float, SENSE<float, Gdft<float> > &, TVPenalty<float> &>(Col<complex<float> >, SENSE<float, Gdft<float> > &,
-                                                                                         TVPenalty<float> &, Col<float>, Col<float>,
-                                                                                         Col<float>, uword, uword, uword, Col<float>,
-                                                                                         uword);
-extern template
-Col<complex<double> >
-reconSolve<double, SENSE<double, Gnufft<double> > &, TVPenalty<double> &>(Col<complex<double> >, SENSE<double, Gnufft<double> > &,
-                                                                          TVPenalty<double> &, Col<double>, Col<double>, Col<double>, uword,
-                                                                          uword, uword, Col<double>, uword);
-extern template
-Col<complex<double> >
-reconSolve<double, SENSE<double, Gdft<double> > &, TVPenalty<double> &>(Col<complex<double> >, SENSE<double, Gdft<double> > &,
-                                                                        TVPenalty<double> &, Col<double>, Col<double>, Col<double>, uword,
-                                                                        uword, uword, Col<double>, uword);
 
-
-*/
 #endif // POWERGRID_RECONSOLVE_H

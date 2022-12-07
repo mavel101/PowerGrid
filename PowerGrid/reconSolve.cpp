@@ -79,10 +79,10 @@ template  Col<complex<float>> reconSolve(Col<complex<float>>, SENSE<float, Gdft<
                                Col<float>, uword, uword, uword, Col<float>,
                                uword);
 
-template  Col<complex<float>> reconSolve(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
+template  Col<complex<float>> reconSolve_dcf(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
                                QuadPenalty<float>, Col<float>, Col<float>,
                                Col<float>, uword, uword, uword, Col<float>,
-                               uword);
+                               uword, Col<float>);
 
 template  Col<complex<float>> reconSolve(Col<complex<float>>, SENSE<float, GdftR2<float>>&,
                                QuadPenalty<float>, Col<float>, Col<float>,
@@ -113,10 +113,10 @@ template  Col<complex<double>> reconSolve(Col<complex<double>>, SENSE<double, Gd
 		Col<double>, uword, uword, uword, Col<double>,
 		uword);
 
-template  Col<complex<double>> reconSolve(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
+template  Col<complex<double>> reconSolve_dcf(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,
 		Col<double>, uword, uword, uword, Col<double>,
-		uword);
+		uword, Col<double>);
 
 template  Col<complex<double>> reconSolve(Col<complex<double>>, SENSE<double, GdftR2<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,

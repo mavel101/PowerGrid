@@ -163,6 +163,25 @@ arma::Col<T1> getISMRMRDImgCoord(ISMRMRD::Dataset *d) {
 	return vImgCoord;
 }
 
+template<typename T1>
+arma::Col<T1> getISMRMRDdcf(ISMRMRD::Dataset *d, uword n_rows) {
+	RANGE()
+	const std::string sDCF = "DCF";
+	arma::Col<double> vDCF_temp;
+	arma::Col<T1> vDCF;
+	std::cout << "Trying to read DCF data" << std::endl;
+	if (d->getNumberOfNDArrays(sDCF) == 0) {
+		vDCF.ones(n_rows);
+		std::cout << "Set DCF to ones." << std::endl;
+		return vDCF;
+	}
+	std::cout << "Got DCF data" << std::endl;
+	ISMRMRD::NDArray<double> tempArray;
+	d->readNDArray(sDCF, 0, tempArray);
+	vDCF_temp = convertFromNDArrayToArma(tempArray);
+	vDCF = conv_to<arma::Col<T1>>::from(vDCF_temp);
+	return vDCF;
+}
 
 template<typename T1>
 arma::Col<T1> getISMRMRDCompletePhaseMap(ISMRMRD::Dataset *d, uword NSlice, uword NSet, uword NRep, uword NAvg, uword NPhase, uword NEcho, uword NSeg, uword imageSize)

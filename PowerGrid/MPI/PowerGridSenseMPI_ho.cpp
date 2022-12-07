@@ -117,6 +117,10 @@ int main(int argc, char **argv) {
   Col<float> ImgCoord;
   ImgCoord = getISMRMRDImgCoord<float>(d);
 
+  // Get DCF
+  Col<float> DCF;
+  DCF = getISMRMRDdcf<float>(d, nro*nc);
+
   // Check and abort if we have more than one encoding space (No Navigators for
   // now).
   std::cout << "hdr.encoding.size() = " << hdr.encoding.size() << std::endl;
@@ -144,13 +148,9 @@ int main(int argc, char **argv) {
   std::cout << "NSliceMax = " << NSliceMax << std::endl;
   std::cout << "NSetMax = "   << NSetMax << std::endl;
   std::cout << "NRepMax = "   << NRepMax << std::endl;
-
   std::cout << "NAvgMax = "   << NAvgMax << std::endl;
-
   std::cout << "NEchoMax = "  << NEchoMax << std::endl;
-
   std::cout << "NPhaseMax = " << NPhaseMax << std::endl;
-
   std::cout << "NSegMax = "   << NSegMax << std::endl;
 
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
                     k3rd_1, k3rd_2, k3rd_3, k3rd_4, k3rd_5, k3rd_6, k3rd_7, kcoco_1, kcoco_2, kcoco_3, kcoco_4,
                     ix, iy, iz, fmSlice, tvec, reco_order);
     SENSE<float, Gdft_ho<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-    ImageTemp = reconSolve<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter);
+    ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF);
 
     if (writeNifti)
       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);
