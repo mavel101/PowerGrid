@@ -181,6 +181,7 @@ int main(int argc, char **argv)
 
 	uword NSet = 0; //Set is only used for arrayed ADCs
 	uword NSeg = 0;
+	double epsilon = 0;
 	for (uword NPhase = 0; NPhase < NPhaseMax; NPhase++) {
 		for (uword NEcho = 0; NEcho < NEchoMax; NEcho++) {
 			for (uword NAvg = 0; NAvg < NAvgMax; NAvg++) {
@@ -262,7 +263,7 @@ int main(int argc, char **argv)
   					xinit.zeros(Nx * Ny * Nz * rank);
 
   					Col<complex<float>> imageOut;
-  					imageOut = solve_pwls_pcg<float, LRobj<float, pcSenseTimeSeg<float>>, R_lowRank<float, QuadPenalty<float>>>(xinit, A_lr, W, vectorise(data), R_lr, NIter);
+  					imageOut = solve_pwls_pcg<float, LRobj<float, pcSenseTimeSeg<float>>, R_lowRank<float, QuadPenalty<float>>>(xinit, A_lr, W, vectorise(data), R_lr, NIter,epsilon);
 					
 					Mat<complex<float>> imgB = reshape(imageOut, Nx * Ny * Nz, rank);
 					

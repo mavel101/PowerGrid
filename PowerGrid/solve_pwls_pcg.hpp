@@ -48,7 +48,7 @@ inline T1 norm_grad(const Col<complex<T1>> &g, const Col<complex<T1>> &yi,
 template <typename T1, typename Tobj, typename Robj>
 Col<complex<T1>> solve_pwls_pcg(const Col<complex<T1>> &xInitial, Tobj const &A,
                                 Col<T1> const &W, Col<complex<T1>> const &yi,
-                                Robj const &R, uword niter) {
+                                Robj const &R, uword niter, const double epsilon) {
   typedef complex<T1> CxT1;
   // Initialize projection
   cout << "Entering solve_pwls_pcg" << endl;
@@ -68,7 +68,6 @@ Col<complex<T1>> solve_pwls_pcg(const Col<complex<T1>> &xInitial, Tobj const &A,
 
   double norm_old;
   double norm_new;
-  double epsilon = 0.001;
 
   Col<CxT1> ngrad;
   Col<CxT1> pgrad;

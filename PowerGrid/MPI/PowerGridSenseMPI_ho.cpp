@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
   uword Nx, Ny, Nz, NIter = 10;
   //uword ;
-  double beta = 0.0;
+  double beta = 0.0, epsilon=0.0;
   uword dims2penalize = 3;
   bool writeNifti;
   po::options_description desc("Allowed options");
@@ -62,9 +62,10 @@ int main(int argc, char **argv) {
       ("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
-          ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
-          ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
-          ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
+      ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
+      ("CGtol,e", po::value<double>(&epsilon), "relative tolerance for cg solver.")
+      ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
+      ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
 
 
   po::variables_map vm;
@@ -285,7 +286,7 @@ int main(int argc, char **argv) {
                     k3rd_1, k3rd_2, k3rd_3, k3rd_4, k3rd_5, k3rd_6, k3rd_7, kcoco_1, kcoco_2, kcoco_3, kcoco_4,
                     ix, iy, iz, fmSlice, tvec, reco_order);
     SENSE<float, Gdft_ho<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-    ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF);
+    ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF, epsilon);
 
     if (writeNifti)
       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);

@@ -57,7 +57,8 @@ Mat<std::complex<T1>> test_pwls_pcg()
     W = 1.0;
 
     Col<CxT1> x_t;
-    x_t = solve_pwls_pcg<T1,Gfft<T1>,QuadPenalty<T1>>(xinit, G, W, TestForward, R, niter);
+    double epsilon = 0;
+    x_t = solve_pwls_pcg<T1,Gfft<T1>,QuadPenalty<T1>>(xinit, G, W, TestForward, R, niter, epsilon);
 
     return x_t;
 }

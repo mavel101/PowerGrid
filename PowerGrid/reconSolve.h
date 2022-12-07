@@ -75,8 +75,10 @@ Col<complex<T1>> reconSolve(Col<complex<T1>> data, TObj& Sg, RObj R,
   Col<std::complex<T1>> xinit;
   xinit.zeros(Nx * Ny * Nz);
 
+  double epsilon = 0;
+
   Col<CxT1> imageOut;
-  imageOut = solve_pwls_pcg<T1, TObj, RObj>(xinit, Sg, W, data, R, niter);
+  imageOut = solve_pwls_pcg<T1, TObj, RObj>(xinit, Sg, W, data, R, niter, epsilon);
 
   return imageOut;
 }
@@ -84,14 +86,14 @@ Col<complex<T1>> reconSolve(Col<complex<T1>> data, TObj& Sg, RObj R,
 template <typename T1, typename TObj, typename RObj>
 Col<complex<T1>> reconSolve_dcf(Col<complex<T1>> data, TObj& Sg, RObj R,
                             Col<T1> kx, Col<T1> ky, Col<T1> kz, uword Nx,
-                            uword Ny, uword Nz, Col<T1> tvec, uword niter, Col<T1> W) {
+                            uword Ny, uword Nz, Col<T1> tvec, uword niter, Col<T1> W, double epsilon) {
   typedef std::complex<T1> CxT1;
 
   Col<std::complex<T1>> xinit;
   xinit.zeros(Nx * Ny * Nz);
 
   Col<CxT1> imageOut;
-  imageOut = solve_pwls_pcg<T1, TObj, RObj>(xinit, Sg, W, data, R, niter);
+  imageOut = solve_pwls_pcg<T1, TObj, RObj>(xinit, Sg, W, data, R, niter,epsilon);
 
   return imageOut;
 }
@@ -118,7 +120,7 @@ extern template
 Col<complex<float> > reconSolve_dcf<float, SENSE<float, Gdft_ho<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
                                                                                            Col<float>, uword, uword, uword, Col<float>,
-                                                                                           uword, Col<float>);
+                                                                                           uword, Col<float>, double);
 extern template
 Col<complex<float> > reconSolve<float, SENSE<float, GdftR2<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, GdftR2<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
@@ -144,7 +146,7 @@ extern template
 Col<complex<double> > reconSolve_dcf<double, SENSE<double, Gdft_ho<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,
 		Col<double>, uword, uword, uword, Col<double>,
-		uword, Col<double>);
+		uword, Col<double>, double);
 
 extern template
 Col<complex<double> > reconSolve<double, SENSE<double, GdftR2<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, GdftR2<double>>&,
