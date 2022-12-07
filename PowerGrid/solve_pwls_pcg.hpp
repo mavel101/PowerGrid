@@ -66,6 +66,10 @@ Col<complex<T1>> solve_pwls_pcg(const Col<complex<T1>> &xInitial, Tobj const &A,
   CxT1 pdenom;
   CxT1 denom;
 
+  double norm_old;
+  double norm_new;
+  double epsilon = 0.001;
+
   Col<CxT1> ngrad;
   Col<CxT1> pgrad;
   CxT1 pdot;
@@ -159,8 +163,16 @@ Col<complex<T1>> solve_pwls_pcg(const Col<complex<T1>> &xInitial, Tobj const &A,
     // Update
     Ax += step * Adir;
     x += (step * ddir);
-    cout << "Iteration Error Norm = " << norm(yi - Ax, 2) << endl;
+
+    norm_new = norm(yi - Ax, 2);
+    cout << "Iteration Error Norm = " << norm_new << endl;
     cout << "Iteration Complete = " << ii << endl;
+    if (ii>0 && std::abs(norm_old - norm_new)/norm_new < epsilon){
+      cout << "Relative norm change = " << std::abs(norm_old - norm_new)/norm_new << " lower than epsilon = " << epsilon << ". Break loop early." << endl;
+      break;
+    }
+
+    norm_old = norm_new;
 
   }
   return x;
