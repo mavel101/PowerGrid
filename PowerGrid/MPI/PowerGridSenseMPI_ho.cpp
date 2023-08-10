@@ -42,15 +42,14 @@ typedef std::vector<std::complex<float>> cmplx_vec;
 
 int main(int argc, char **argv) {
   std::string rawDataFilePath, outputImageFilePath, senseMapFilePath,
-      fieldMapFilePath, precisionString,
+      fieldMapFilePath, precisionString, Regularization,
       rawDataNavFilePath;
 
   bmpi::environment env(argc, argv, true);
   bmpi::communicator world;
 
-  uword Nx, Ny, Nz, NIter = 10;
-  //uword ;
-  double beta = 0.0, epsilon=0.0;
+  uword Nx, Ny, Nz, NIter = 10, RType=0;
+  double beta = 0.0, epsilon=0.0, delta=1.0;
   uword dims2penalize = 3;
   bool writeNifti;
   po::options_description desc("Allowed options");
@@ -62,7 +61,9 @@ int main(int argc, char **argv) {
       ("Nx,x", po::value<uword>(&Nx), "Image size in X")
 			("Ny,y", po::value<uword>(&Ny), "Image size in Y")
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
+      ("Regularization,R", po::value<std::string>(&Regularization)->required(), "Regularization (either QUAD or TV)")
       ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
+      ("Delta,D", po::value<double>(&delta), "TV regularization parameter")
       ("CGtol,e", po::value<double>(&epsilon), "relative tolerance for cg solver.")
       ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
       ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
@@ -86,6 +87,17 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (Regularization.compare("QUAD") == 0) {
+    RType = 0;
+  }
+  else if (Regularization.compare("TV") == 0) {
+    RType = 1;
+  }
+  else{
+      std::cout << "Did not recognize Regularization selection. " << std::endl
+                << "Acceptable values are QUAD or TV."             << std::endl;
+      return 1;
+  }
 
   ISMRMRD::Dataset *d;
   ISMRMRD::IsmrmrdHeader hdr;
@@ -280,13 +292,19 @@ int main(int argc, char **argv) {
     std::cout << "Number of columns in data = " << data.n_cols << std::endl;
 
     // recon
-    QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
-
     Gdft_ho<float> A(kx.n_rows, Nx*Ny*Nz, kx, ky, kz, k2nd_1, k2nd_2, k2nd_3, k2nd_4, k2nd_5, 
                     k3rd_1, k3rd_2, k3rd_3, k3rd_4, k3rd_5, k3rd_6, k3rd_7, kcoco_1, kcoco_2, kcoco_3, kcoco_4,
                     ix, iy, iz, fmSlice, tvec, reco_order);
     SENSE<float, Gdft_ho<float>> Sg(A, senSlice, kx.n_rows, Nx*Ny*Nz, nc);
-    ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF, epsilon);
+
+    if (RType == 1){
+        TVPenalty<float> R(Nx, Ny, Nz, beta, delta, dims2penalize);
+        ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, TVPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF, epsilon);
+    }
+    else{
+        QuadPenalty<float> R(Nx, Ny, Nz, beta, dims2penalize);
+        ImageTemp = reconSolve_dcf<float, SENSE<float, Gdft_ho<float>>, QuadPenalty<float>>(data, Sg, R, kx, ky, kz, Nx, Ny, Nz, tvec, NIter, DCF, epsilon);
+    }
 
     if (writeNifti)
       writeNiftiMagPhsImage<float>(filename,ImageTemp,Nx,Ny,Nz);

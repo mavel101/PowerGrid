@@ -122,6 +122,11 @@ Col<complex<float> > reconSolve_dcf<float, SENSE<float, Gdft_ho<float> >, QuadPe
                                                                                            Col<float>, uword, uword, uword, Col<float>,
                                                                                            uword, Col<float>, double);
 extern template
+Col<complex<float> > reconSolve_dcf<float, SENSE<float, Gdft_ho<float> >, TVPenalty<float>>(Col<complex<float>>, SENSE<float, Gdft_ho<float>>&,
+                                                                                           TVPenalty<float>, Col<float>, Col<float>,
+                                                                                           Col<float>, uword, uword, uword, Col<float>,
+                                                                                           uword, Col<float>, double);                                                                    
+extern template
 Col<complex<float> > reconSolve<float, SENSE<float, GdftR2<float> >, QuadPenalty<float>>(Col<complex<float>>, SENSE<float, GdftR2<float>>&,
                                                                                            QuadPenalty<float>, Col<float>, Col<float>,
                                                                                            Col<float>, uword, uword, uword, Col<float>,
@@ -145,6 +150,12 @@ Col<complex<double> > reconSolve<double, SENSE<double, Gdft<double> >, QuadPenal
 extern template
 Col<complex<double> > reconSolve_dcf<double, SENSE<double, Gdft_ho<double> >, QuadPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
 		QuadPenalty<double>, Col<double>, Col<double>,
+		Col<double>, uword, uword, uword, Col<double>,
+		uword, Col<double>, double);
+
+extern template
+Col<complex<double> > reconSolve_dcf<double, SENSE<double, Gdft_ho<double> >, TVPenalty<double>>(Col<complex<double>>, SENSE<double, Gdft_ho<double>>&,
+		TVPenalty<double>, Col<double>, Col<double>,
 		Col<double>, uword, uword, uword, Col<double>,
 		uword, Col<double>, double);
 
