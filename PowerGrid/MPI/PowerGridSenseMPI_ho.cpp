@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 			("Nz,z", po::value<uword>(&Nz), "Image size in Z")
       ("Regularization,R", po::value<std::string>(&Regularization)->required(), "Regularization (either QUAD or TV)")
       ("Beta,B", po::value<double>(&beta), "Spatial regularization penalty weight")
-      ("Delta,D", po::value<double>(&delta), "TV regularization parameter")
+      ("Delta,d", po::value<double>(&delta), "TV regularization parameter")
       ("CGtol,e", po::value<double>(&epsilon), "relative tolerance for cg solver.")
       ("CGIterations,n", po::value<uword>(&NIter), "Number of preconditioned conjugate gradient interations for main solver")
       ("Dims2Penalize,D", po::value<uword>(&dims2penalize), "Dimensions to apply regularization to (2 or 3).");
