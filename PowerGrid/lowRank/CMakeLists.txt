@@ -14,6 +14,6 @@
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
     set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} ")
 
-    target_link_libraries(oscillateRecon ${LIBS} PowerGrid)
+    target_link_libraries(oscillateRecon ${LIBS} PGCommon)
     
     install(TARGETS oscillateRecon DESTINATION bin)

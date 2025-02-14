@@ -37,9 +37,9 @@
     #set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi ")
 
 
-    target_link_libraries(PowerGridPcSenseMPI ${mpiLIBS} PowerGrid)
-    target_link_libraries(PowerGridSenseMPI ${mpiLIBS} PowerGrid)
-    target_link_libraries(PowerGridPcSenseMPI_TS ${mpiLIBS} PowerGrid)
+    target_link_libraries(PowerGridPcSenseMPI ${mpiLIBS} PGCommon)
+    target_link_libraries(PowerGridSenseMPI ${mpiLIBS} PGCommon)
+    target_link_libraries(PowerGridPcSenseMPI_TS ${mpiLIBS} PGCommon)
     
     install(TARGETS PowerGridPcSenseMPI DESTINATION bin)
     install(TARGETS PowerGridSenseMPI DESTINATION bin)

@@ -37,16 +37,20 @@ if(Boost_FOUND)
 endif()
 
 set(CUDAVER 11.5)
-set(PGI_YEAR $ENV{HPCSDK_RELEASE}})
-if(OPENACC_GPU)
-	find_path(cuFFT_INCLUDE_DIR cufft.h HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/include)
-	include_directories(${cuFFT_INCLUDE_DIR})
-	find_library(cuFFT_LIBRARIES cufft HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/lib64)
-	set(LIBS ${LIBS} ${cuFFT_LIBRARIES})
-	find_library(cudaRT_LIBRARIES cudart HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
-	set(LIBS ${LIBS} ${cudaRT_LIBRARIES})
-	find_library(nvToolsExt_LIBRARIES nvToolsExt HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
-	set(LIBS ${LIBS} ${nvToolsExt_LIBRARIES})
+set(PGI_YEAR $ENV{HPCSDK_RELEASE})
+if(OPENACC_GPU) 
+	find_package(CUDAToolkit)
+	set(LIBS ${LIBS} CUDA::cufft)
+	set(LIBS ${LIBS} CUDA::cudart)
+	set(LIBS ${LIBS} CUDA::nvToolsExt)
+	#find_path(cuFFT_INCLUDE_DIR cufft.h HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/include)
+	#include_directories(${cuFFT_INCLUDE_DIR})
+	#find_library(cuFFT_LIBRARIES cufft HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/math_libs/${CUDAVER}/lib64)
+	#set(LIBS ${LIBS} ${cuFFT_LIBRARIES})
+	#find_library(cudaRT_LIBRARIES cudart HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
+	#set(LIBS ${LIBS} ${cudaRT_LIBRARIES})
+	#find_library(nvToolsExt_LIBRARIES nvToolsExt HINTS $ENV{NVHPC}/Linux_x86_64/$ENV{HPCSDK_VERSION}/cuda/${CUDAVER}/targets/x86_64-linux/lib /usr/local/cuda/lib64)
+	#set(LIBS ${LIBS} ${nvToolsExt_LIBRARIES})
 	find_path(FFTW_INCLUDE_DIR fftw3.h HINTS $ENV{FFTW_INC})
 	find_library(FFTW_LIBRARIES NAMES fftw3 HINTS $ENV{FFTW_DIR} /usr/lib/x86_64-linux-gnu/)
 	find_library(FFTWF_LIBRARIES NAMES fftw3f HINTS $ENV{FFTW_DIR} /usr/lib/x86_64-linux-gnu/)
@@ -102,14 +106,14 @@ set(PG_FILES
 	${PROJECT_SOURCE_DIR}/PowerGrid/reconSupport/directRecon.cpp
 )
 
-add_library(PowerGrid SHARED ${PG_FILES})
-target_link_libraries(PowerGrid ${LIBS})
+add_library(PGCommon SHARED ${PG_FILES})
+target_link_libraries(PGCommon ${LIBS})
 
 if(MPISupport)
 	include_directories(MPI)
 endif(MPISupport)
 
-find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/ ~/CIVIC/lib)
+find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
 message(STATUS "Libraries to be linked in: ${LIBS}")
@@ -123,7 +127,7 @@ else()
 	add_definitions(-DBOOST_NO_ALIGNMENT)
 		if(OPENACC_GPU)
 			add_definitions(-DOPENACC_GPU)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mcuda -Minfo=accel -fast -acc -ta=tesla:cc35,cc60,cc75,cc86,cuda${CUDAVER} -pgf90libs")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -cuda -Minfo=accel -fast -acc -gpu=cc60,cc70,cc75,cc86 ")
 		elseif(OPENACC_MP)
 			add_definitions(-DOPENACC_MP)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mnollvm -O1 -Minfo=accel -acc  -ta=multicore -pgf90libs")
@@ -145,19 +149,19 @@ set(POWERGRID_ISMRMRD
 	./PowerGrid/PowerGridIsmrmrd.cpp
 )
 add_executable(PowerGridIsmrmrd ${POWERGRID_ISMRMRD})
-target_link_libraries(PowerGridIsmrmrd ${LIBS} PowerGrid)
+target_link_libraries(PowerGridIsmrmrd ${LIBS} PGCommon)
 
 set(POWERGRID_PCSENSE
 	./PowerGrid/PowerGridPcSense.cpp
 )
 add_executable(PowerGridPcSense ${POWERGRID_PCSENSE})
-target_link_libraries(PowerGridPcSense ${LIBS} PowerGrid)
+target_link_libraries(PowerGridPcSense ${LIBS} PGCommon)
 
 set(POWERGRID_PCSENSE_TIMESEG
 	./PowerGrid/PowerGridPcSenseTimeSeg.cpp
 )
 add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
-target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PowerGrid)
+target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PGCommon)
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
@@ -168,5 +172,6 @@ endif (MPISupport)
 
 # Manage installing targets to sane locations in /opt
 install(TARGETS PowerGridPcSense DESTINATION bin)
+install(TARGETS PowerGridPcSenseTimeSeg DESTINATION bin)
 install(TARGETS PowerGridIsmrmrd DESTINATION bin)
-install(TARGETS PowerGrid DESTINATION lib)
+install(TARGETS PGCommon DESTINATION lib)

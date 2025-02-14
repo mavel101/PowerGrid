@@ -12,6 +12,6 @@
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
     set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} ")
 
-    target_link_libraries(gridCoilImages ${LIBS} PowerGrid)
+    target_link_libraries(gridCoilImages ${LIBS} PGCommon)
     
     install(TARGETS gridCoilImages DESTINATION bin)
