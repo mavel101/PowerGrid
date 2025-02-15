@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/nvhpc:25.1-devel-cuda_multi-ubuntu24.04
+FROM nvcr.io/nvidia/nvhpc:25.1-devel-cuda12.6-ubuntu24.04
 # Run everything in /root
 WORKDIR /root
 
