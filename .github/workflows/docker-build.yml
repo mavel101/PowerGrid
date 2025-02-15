@@ -1,4 +1,4 @@
-name: Create PG base docker image
+name: Create PG docker image
 on: 
   push: 
     branches: ['HPCSDK_25.1']
@@ -39,7 +39,9 @@ jobs:
         with:
           context: ./docker/pg
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: 
+            ${{ steps.meta.outputs.tags }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'HPCSDK_25.1') }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
