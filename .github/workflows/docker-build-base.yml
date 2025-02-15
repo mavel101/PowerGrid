@@ -1,7 +1,7 @@
 name: Create PG base docker image
 on: 
   push: 
-    branches: ['HPCSDK-25.1']
+    branches: ['HPCSDK_25.1']
 
 env:
   REGISTRY: ghcr.io
