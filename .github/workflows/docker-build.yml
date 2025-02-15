@@ -41,7 +41,7 @@ jobs:
           push: true
           tags: 
             ${{ steps.meta.outputs.tags }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'HPCSDK_25.1') }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'HPCSDK_25_1') }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
