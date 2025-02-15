@@ -39,9 +39,7 @@ jobs:
         with:
           context: ./docker/pg-hpcsdk
           push: true
-          tags: 
-            ${{ steps.meta.outputs.tags }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'HPCSDK_25_1') }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation

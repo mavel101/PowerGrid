@@ -1,4 +1,4 @@
-FROM ghcr.io/acerjanic/powergrid-hpcsdk:HPCSDK_25_1
+FROM ghcr.io/acerjanic/powergrid-hpcsdk:HPCSDK_25.1
 # Run everything in /root
 WORKDIR /root
 
