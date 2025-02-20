@@ -28,8 +28,8 @@
     add_executable(PowerGridSenseMPI ${mpi_POWERGRID_Sense})
     find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
-    set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
-    set(mpiLIBS ${LIBS})
+    #set(LIBS ${LIBS} )
+    set(mpiLIBS ${ISMRMRD_LIBRARIES})
     set(mpiLIBS ${mpiLIBS} ${MPI_CXX_LIBRARIES})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}  ${MPI_CXX_LINK_FLAGS}")
