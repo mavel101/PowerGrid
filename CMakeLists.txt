@@ -106,15 +106,15 @@ set(PG_FILES
 	${PROJECT_SOURCE_DIR}/PowerGrid/reconSupport/directRecon.cpp
 )
 
+find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
+
 add_library(PGCommon SHARED ${PG_FILES})
 target_link_libraries(PGCommon ${LIBS})
 
 if(MPISupport)
 	include_directories(MPI)
 endif(MPISupport)
-
-find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
-set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
 message(STATUS "Libraries to be linked in: ${LIBS}")
 
@@ -149,19 +149,19 @@ set(POWERGRID_ISMRMRD
 	./PowerGrid/PowerGridIsmrmrd.cpp
 )
 add_executable(PowerGridIsmrmrd ${POWERGRID_ISMRMRD})
-target_link_libraries(PowerGridIsmrmrd ${LIBS} PGCommon)
+target_link_libraries(PowerGridIsmrmrd PGCommon)
 
 set(POWERGRID_PCSENSE
 	./PowerGrid/PowerGridPcSense.cpp
 )
 add_executable(PowerGridPcSense ${POWERGRID_PCSENSE})
-target_link_libraries(PowerGridPcSense ${LIBS} PGCommon)
+target_link_libraries(PowerGridPcSense PGCommon)
 
 set(POWERGRID_PCSENSE_TIMESEG
 	./PowerGrid/PowerGridPcSenseTimeSeg.cpp
 )
 add_executable(PowerGridPcSenseTimeSeg ${POWERGRID_PCSENSE_TIMESEG})
-target_link_libraries(PowerGridPcSenseTimeSeg ${LIBS} PGCommon)
+target_link_libraries(PowerGridPcSenseTimeSeg PGCommon)
 
 add_subdirectory(PowerGrid/lowRank)
 add_subdirectory(PowerGrid/reconSupport)
