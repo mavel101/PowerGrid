@@ -5,7 +5,7 @@
             )
 
     add_executable(gridCoilImages ${POWERGRID_GridCoilImages})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
     #set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 

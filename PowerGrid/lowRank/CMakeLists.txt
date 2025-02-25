@@ -7,7 +7,7 @@
             )
 
     add_executable(oscillateRecon ${POWERGRID_oscillateRecon})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
     #set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
