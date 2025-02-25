@@ -110,7 +110,7 @@ find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
 add_library(PGCommon SHARED ${PG_FILES})
-target_link_libraries(PGCommon ${LIBS})
+target_link_libraries(PGCommon PRIVATE ${LIBS})
 
 if(MPISupport)
 	include_directories(MPI)
