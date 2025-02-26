@@ -22,7 +22,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 # Boost version >= 1.70.0 have improved support for cmake built into the boost install
 # Unfortunately, this support breaks when used with PGI compilers
 # As a work around, ignore the generated cmake modules
-set(Boost_NO_BOOST_CMAKE ON)
+#set(Boost_NO_BOOST_CMAKE ON)
 
 if(MPISupport)
     find_package(MPI)
@@ -110,7 +110,7 @@ find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
 add_library(PGCommon SHARED ${PG_FILES})
-target_link_libraries(PGCommon PRIVATE ${LIBS})
+target_link_libraries(PGCommon ${LIBS})
 
 if(MPISupport)
 	include_directories(MPI)
