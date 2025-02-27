@@ -11,7 +11,7 @@
             )
 
     add_executable(PowerGridPcSenseMPI ${mpi_POWERGRID_PcSense})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
     set(mpi_POWERGRID_PcSense_TS
     mpipcSENSETimeSeg.cpp
@@ -19,14 +19,14 @@
     )
 
     add_executable(PowerGridPcSenseMPI_TS ${mpi_POWERGRID_PcSense_TS})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
     set(mpi_POWERGRID_Sense
     PowerGridSenseMPI.cpp
     )
 
     add_executable(PowerGridSenseMPI ${mpi_POWERGRID_Sense})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
     #set(LIBS ${LIBS} )
     #set(mpiLIBS ${ISMRMRD_LIBRARIES})
