@@ -27,12 +27,12 @@
 #define PowerGrid_mpipcSENSETimeSeg_hpp
 
 #include "../../Support/ArmaExtensions/arma_extensions.h"
-#include "../PGIncludes.h"
-#include "../Gdft.h"
+#include "../PowerGrid/PGIncludes.h"
+#include "../PowerGrid/Gdft.h"
 #include <boost/mpi.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi/environment.hpp>
-#include "../PowerGrid.h"
+#include "../PowerGrid/PowerGrid.h"
 
 using namespace arma;
 

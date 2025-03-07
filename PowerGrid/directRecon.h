@@ -27,8 +27,8 @@ Developed by:
 #ifndef POWERGRID_DIRECTRECON_H
 #define POWERGRID_DIRECTRECON_H
 
-#include "../PowerGrid.h"
-#include "../processIsmrmrd.hpp"
+#include "PowerGrid.h"
+#include "processIsmrmrd.hpp"
 using namespace arma;
 
 template<typename T>

@@ -28,13 +28,13 @@ Developed by:
  *****************************************************************************/
 
 // //Project headers.
-#include "../PowerGrid.h"
+#include "../PowerGrid/PowerGrid.h"
 #include "ismrmrd/dataset.h"
 #include "ismrmrd/ismrmrd.h"
 #include "ismrmrd/version.h"
 #include "ismrmrd/xml.h"
-#include "../processIsmrmrd.hpp"
-#include "../processNIFTI.hpp"
+#include "../PowerGrid/processIsmrmrd.hpp"
+#include "../PowerGrid/processNIFTI.hpp"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
