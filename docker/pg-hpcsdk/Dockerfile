@@ -1,59 +1,67 @@
-FROM ubuntu:18.04
-
+FROM nvcr.io/nvidia/nvhpc:25.1-devel-cuda12.6-ubuntu24.04
 # Run everything in /root
 WORKDIR /root
 
 # Add needed packages
-RUN apt-get -y update && apt-get install -y g++ gcc curl wget libopenblas-dev \
+RUN apt-get -y update && apt-get install -y pkg-config g++ gcc curl wget libopenblas-dev \
 						libarpack2-dev nano wget git make libssl-dev \
 						libhdf5-dev libfftw3-dev libnl-route-3-200 && apt-get clean all;
 
 # Build and Install Latest CMake
-RUN curl -O -J -L https://github.com/Kitware/CMake/releases/download/v3.19.2/cmake-3.19.2.tar.gz; \
+RUN curl -O -J -L https://github.com/Kitware/CMake/releases/download/v3.31.1/cmake-3.31.1.tar.gz; \
 	apt-get -y purge cmake; \
-	tar -xvf ./cmake-3.19.2.tar.gz; \
-	cd ./cmake-3.19.2; \
+	tar -xvf ./cmake-3.31.1.tar.gz; \
+	cd ./cmake-3.31.1; \
 	./bootstrap --prefix=/usr/local/; \
 	make -j4; \
 	make install; \
 	cd ~; \
-	rm -rf ./cmake-3.19.2; \
-	rm ./cmake-3.19.2.tar.gz;
+	rm -rf ./cmake-3.31.1; \
+	rm ./cmake-3.31.1.tar.gz;
 
 # Fix errors during install of HPC SDK
-RUN chown -Rv _apt:root /var/cache/apt/archives/partial/; \
-chmod -Rv 700 /var/cache/apt/archives/partial/
+#RUN chown -Rv _apt:root /var/cache/apt/archives/partial/; \
+#chmod -Rv 700 /var/cache/apt/archives/partial/
 
-# Download and install NVIDIA HPC SDK 20.11
-RUN  wget https://developer.download.nvidia.com/hpc-sdk/20.11/nvhpc-20-11_20.11_arm64.deb \
-	https://developer.download.nvidia.com/hpc-sdk/20.11/nvhpc-2020_20.11_arm64.deb; \
-	apt-get install -y ./nvhpc-20-11_20.11_arm64.deb ./nvhpc-2020_20.11_arm64.deb; \
-	rm ./nvhpc-20-11_20.11_arm64.deb ./nvhpc-2020_20.11_arm64.deb;
+#RUN curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
+
+#RUN echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+
+#RUN apt-get update -y
+
+#RUN apt-get install -y nvhpc-25-1
+
+# Download and install NVIDIA HPC SDK 25.1
+#RUN  wget https://developer.download.nvidia.com/hpc-sdk/21.9/nvhpc-21-9_21.9_amd64.deb \
+#	https://developer.download.nvidia.com/hpc-sdk/21.9/nvhpc-2021_21.9_amd64.deb; \
+#	apt-get install -y ./nvhpc-2021_21.9_amd64.deb ./nvhpc-21-9_21.9_amd64.deb; \
+#	rm ./nvhpc-21-9_21.9_amd64.deb ./nvhpc-2021_21.9_amd64.deb;
 
 # Handle NVIDIA HPC SDK specific stuff
-ENV NVARCH=Linux_aarch64
-ENV NVCOMPILERS=/opt/nvidia/hpc_sdk
-ENV NVSDKVER=20.11
-ENV CUDA_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/cuda"
-ENV MANPATH="${MANPATH}:${NVCOMPILERS}/${NVARCH}/20.11/compilers/man"
-ENV LD_LIBRARY_PATH="${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/20.11/compilers/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/2020/compilers/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/20.11/math_libs/lib64:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/2020/math_libs/lib64:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/mpi/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/2020/comm_libs/mpi/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/nccl/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/2020/comm_libs/nccl/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/nvshmem/lib:${LD_LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/2020/comm_libs/nvshmem/lib:${LD_LIBRARY_PATH}"
-ENV OPAL_PREFIX="${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/mpi/"
-ENV PATH="${NVCOMPILERS}/${NVARCH}/20.11/compilers/bin:${PATH}"
-ENV PATH="${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/mpi/bin:${PATH}"
-ENV MANPATH="${MANPATH}:${NVCOMPILERS}/${NVARCH}/20.11/comm_libs/mpi/man"
+#ENV NVARCH=Linux_x86_64
+#ENV NVCOMPILERS=/opt/nvidia/hpc_sdk
+#ENV NVSDKVER=25.1
+#ENV NVSDKYEAR=2025
+#ENV CUDA_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/cuda"
+#ENV MANPATH="${MANPATH}:${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/compilers/man"
+#ENV LD_LIBRARY_PATH="${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/compilers/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKYEAR}/compilers/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/math_libs/lib64:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKYEAR}/math_libs/lib64:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/comm_libs/mpi/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKYEAR}/comm_libs/mpi/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/comm_libs/nccl/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKYEAR}/comm_libs/nccl/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/comm_libs/nvshmem/lib:${LD_LIBRARY_PATH}"
+#ENV LD_LIBRARY_PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKYEAR}/comm_libs/nvshmem/lib:${LD_LIBRARY_PATH}"
+#ENV OPAL_PREFIX="${NVCOMPILERS}/${NVARCH}/NVSDKVER/comm_libs/mpi/"
+#ENV PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/compilers/bin:${PATH}"
+#ENV PATH="${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/comm_libs/mpi/bin:${PATH}"
+#ENV MANPATH="${MANPATH}:${NVCOMPILERS}/${NVARCH}/${NVSDKVER}/comm_libs/mpi/man"
 
 # Install custom compile of boost for mpi.
-RUN wget -O ~/boost_1_75_0.tar.bz2 -c 'https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2' --max-redirect=100;\
+RUN wget -O ~/boost_1_75_0.tar.bz2 -c 'https://archives.boost.io/release/1.75.0/source/boost_1_75_0.tar.bz2' --max-redirect=100;\
 	tar xjf ~/boost_1_75_0.tar.bz2; \
 	cd ~/boost_1_75_0/; \
 	./bootstrap.sh --prefix=/usr/local --with-toolset=pgi;  \

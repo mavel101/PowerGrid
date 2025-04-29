@@ -150,7 +150,7 @@ template <typename T1> Gnufft<T1>::~Gnufft() {
 // Overloaded methods for forward and adjoint transform
 // Forward transform operation using gridding
 template <typename T1>
-inline Col<complex<T1>> Gnufft<T1>::
+Col<complex<T1>> Gnufft<T1>::
 operator*(const Col<complex<T1>> &d) const // Don't change these arguments
 {
 RANGE()
@@ -176,7 +176,7 @@ RANGE()
 
 // Adjoint transform operation
 template <typename T1>
-inline Col<complex<T1>> Gnufft<T1>::operator/(const Col<complex<T1>> &d) const {
+Col<complex<T1>> Gnufft<T1>::operator/(const Col<complex<T1>> &d) const {
   // uword dataLength = n2;
   // Let's trim the operations to avoid data overhead and transfers
   // Basically if we know that the data points are zero, they have no impact
@@ -211,7 +211,7 @@ inline Col<complex<T1>> Gnufft<T1>::operator/(const Col<complex<T1>> &d) const {
 }
 
 template <typename T1>
-inline Col<complex<T1>> Gnufft<T1>::forwardSpatialInterp(const Col<complex<T1>> &d) const {
+Col<complex<T1>> Gnufft<T1>::forwardSpatialInterp(const Col<complex<T1>> &d) const {
   uword dataLength = this->n2;
 
   const T1 *dataPtr = reinterpret_cast<const T1 *>(d.memptr());
@@ -263,7 +263,7 @@ inline Col<complex<T1>> Gnufft<T1>::forwardSpatialInterp(const Col<complex<T1>> 
 }
 
 template <typename T1>
-inline Col<complex<T1>> Gnufft<T1>::adjointSpatialInterp(const Col<complex<T1>> &d) const {
+Col<complex<T1>> Gnufft<T1>::adjointSpatialInterp(const Col<complex<T1>> &d) const {
 
   uword dataLength = this->n2;
 

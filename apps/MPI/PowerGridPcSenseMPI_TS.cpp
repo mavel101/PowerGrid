@@ -28,9 +28,9 @@ Developed by:
  *****************************************************************************/
 
 // //Project headers.
-#include "PowerGrid.h"
-#include "processIsmrmrd.hpp"
-#include "processNIFTI.hpp"
+#include "../PowerGrid/PowerGrid.h"
+#include "../PowerGrid/processIsmrmrd.hpp"
+#include "../PowerGrid/processNIFTI.hpp"
 
 #include <boost/program_options.hpp>
 #include "cnpy.h"

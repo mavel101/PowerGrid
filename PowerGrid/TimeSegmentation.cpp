@@ -250,7 +250,7 @@ inline Col<complex<T1>> TimeSegmentation<T1, Tobj>::
 // d is the vector of data of type T1, note it is const, so we don't modify it
 // directly rather return another vector of type T1
 template <typename T1, typename Tobj>
-inline Col<complex<T1>> TimeSegmentation<T1, Tobj>::
+Col<complex<T1>> TimeSegmentation<T1, Tobj>::
 operator*(const Col<complex<T1>>& d) const
 {
     RANGE(__FUNCTION__)
@@ -294,8 +294,9 @@ operator*(const Col<complex<T1>>& d) const
 
     return sum(outData, 1);
 }
+
 template <typename T1, typename Tobj>
-inline Col<complex<T1>> TimeSegmentation<T1, Tobj>::
+Col<complex<T1>> TimeSegmentation<T1, Tobj>::
 operator/(const Col<complex<T1>>& d) const
 {
     RANGE(__FUNCTION__)
@@ -325,4 +326,10 @@ operator/(const Col<complex<T1>>& d) const
 
 // Explicit Instantiations
 template class TimeSegmentation<float, Gnufft<float>>;
+//template Col<complex<float>> TimeSegmentation<float, Gnufft<float> >::operator/(arma::Col<std::complex<float> > const &) const;
+//template Col<complex<float>> TimeSegmentation<float, Gnufft<float> >::operator*(arma::Col<std::complex<float> > const &) const;
+template class TimeSegmentation<float, Gdft<float>>;
 template class TimeSegmentation<double, Gnufft<double>>;
+//template Col<complex<double>> TimeSegmentation<double, Gnufft<double> >::operator/(arma::Col<std::complex<double>> const &) const;
+//template Col<complex<double>> TimeSegmentation<double, Gnufft<double> >::operator*(arma::Col<std::complex<double>> const &) const;
+template class TimeSegmentation<double, Gdft<double>>;

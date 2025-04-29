@@ -7,13 +7,13 @@
             )
 
     add_executable(oscillateRecon ${POWERGRID_oscillateRecon})
-    find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
+    #find_library(ISMRMRD_LIBRARIES ismrmrd HINTS /usr/lib/)
 
-    set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
+    #set(LIBS ${LIBS} ${ISMRMRD_LIBRARIES})
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
     set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} ")
 
-    target_link_libraries(oscillateRecon ${LIBS} PowerGrid)
+    target_link_libraries(oscillateRecon PGCommon)
     
     install(TARGETS oscillateRecon DESTINATION bin)
